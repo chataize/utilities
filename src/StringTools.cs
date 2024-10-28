@@ -24,4 +24,20 @@ public static class StringTools
 
         return new string(buffer);
     }
+
+    public static string RemoveSpecialCharacters(this string value)
+    {
+        Span<char> buffer = stackalloc char[value.Length];
+        int j = 0;
+
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (char.IsLetterOrDigit(value[i]) || char.IsWhiteSpace(value[i]))
+            {
+                buffer[j++] = value[i];
+            }
+        }
+
+        return new string(buffer[..j]);
+    }
 }
