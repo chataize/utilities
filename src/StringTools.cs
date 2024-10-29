@@ -105,7 +105,7 @@ public static class StringTools
                 continue;
             }
 
-            if (char.IsUpper(character))
+            if (char.IsAsciiLetterUpper(character))
             {
                 if (!wasPreviousUpper && !wasPreviousUnderscore && newLength > 0)
                 {
