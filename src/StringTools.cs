@@ -77,7 +77,9 @@ public static class StringTools
 
     public static string ToSeparated(string value, char separator, bool upper = false)
     {
-        Span<char> buffer = value.Length <= 128 ? stackalloc char[value.Length * 2] : new char[value.Length * 2];
+        var maxUnderscores = value.Length / 2 + 1;
+
+        Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length + maxUnderscores] : new char[value.Length + maxUnderscores];
 
         var newLength = 0;
         var actualLength = 0;
