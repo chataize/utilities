@@ -112,7 +112,7 @@ public static class StringTools
                     buffer[newLength++] = separator;
                 }
 
-                buffer[newLength++] = upper ? character : char.ToLower(character);
+                buffer[newLength++] = upper ? character : char.ToLowerInvariant(character);
 
                 actualLength = newLength;
                 wasPreviousUpper = true;
@@ -120,7 +120,7 @@ public static class StringTools
             }
             else
             {
-                buffer[newLength++] = upper ? char.ToUpper(character) : character;
+                buffer[newLength++] = upper ? char.ToUpperInvariant(character) : character;
 
                 actualLength = newLength;
                 wasPreviousUpper = false;
