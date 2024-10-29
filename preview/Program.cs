@@ -1,8 +1,15 @@
 ﻿using ChatAIze.Utilities;
 
 var input = "  _  __ Hello,  World! UserID HTTP ąĘćÓłż RequestExample 1234.. FIRST.second.Third  _ ";
-var snakeOutput = input.ToSnakeCase();
-var kebabOutput = input.ToKebabCase();
 
-Console.WriteLine(snakeOutput);
-Console.WriteLine(kebabOutput);
+var snakeLower = input.ToSnakeLower();
+var snakeUpper = input.ToSnakeUpper();
+var kebabLower = input.ToKebabLower();
+var ToKebabUpper = input.ToKebabUpper();
+
+Console.WriteLine($"Input: {input}");
+Console.WriteLine($"Snake lower: {snakeLower}");
+Console.WriteLine($"Snake upper: {snakeUpper}");
+Console.WriteLine($"Kebab lower: {kebabLower}");
+Console.WriteLine($"Kebab upper: {ToKebabUpper}");
+

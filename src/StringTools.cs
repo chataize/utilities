@@ -75,17 +75,7 @@ public static class StringTools
         return new string(buffer);
     }
 
-    public static string ToSnakeCase(this string value)
-    {
-        return ToSpecialCase(value, '_');
-    }
-
-    public static string ToKebabCase(this string value)
-    {
-        return ToSpecialCase(value, '-');
-    }
-
-    private static string ToSpecialCase(string value, char separator)
+    public static string ToSeparated(string value, char separator, bool upper = false)
     {
         Span<char> buffer = value.Length <= 128 ? stackalloc char[value.Length * 2] : new char[value.Length * 2];
 
@@ -122,7 +112,7 @@ public static class StringTools
                     buffer[newLength++] = separator;
                 }
 
-                buffer[newLength++] = char.ToLower(character);
+                buffer[newLength++] = upper ? character : char.ToLower(character);
 
                 actualLength = newLength;
                 wasPreviousUpper = true;
@@ -130,7 +120,7 @@ public static class StringTools
             }
             else
             {
-                buffer[newLength++] = character;
+                buffer[newLength++] = upper ? char.ToUpper(character) : character;
 
                 actualLength = newLength;
                 wasPreviousUpper = false;
@@ -139,5 +129,25 @@ public static class StringTools
         }
 
         return new string(buffer[..actualLength]);
+    }
+
+    public static string ToSnakeLower(this string value)
+    {
+        return ToSeparated(value, '_', upper: false);
+    }
+
+    public static string ToSnakeUpper(this string value)
+    {
+        return ToSeparated(value, '_', upper: true);
+    }
+
+    public static string ToKebabLower(this string value)
+    {
+        return ToSeparated(value, '-', upper: false);
+    }
+
+    public static string ToKebabUpper(this string value)
+    {
+        return ToSeparated(value, '-', upper: true);
     }
 }
