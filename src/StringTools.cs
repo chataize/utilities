@@ -77,6 +77,16 @@ public static class StringTools
 
     public static string ToSnakeCase(this string value)
     {
+        return ToSpecialCase(value, '_');
+    }
+
+    public static string ToKebabCase(this string value)
+    {
+        return ToSpecialCase(value, '-');
+    }
+
+    private static string ToSpecialCase(string value, char separator)
+    {
         Span<char> buffer = value.Length <= 128 ? stackalloc char[value.Length * 2] : new char[value.Length * 2];
 
         var newLength = 0;
@@ -91,7 +101,7 @@ public static class StringTools
             {
                 if (newLength > 0 && !wasPreviousUnderscore)
                 {
-                    buffer[newLength++] = '_';
+                    buffer[newLength++] = separator;
                     wasPreviousUnderscore = true;
                 }
 
@@ -109,7 +119,7 @@ public static class StringTools
             {
                 if (!wasPreviousUpper && !wasPreviousUnderscore && newLength > 0)
                 {
-                    buffer[newLength++] = '_';
+                    buffer[newLength++] = separator;
                 }
 
                 buffer[newLength++] = char.ToLower(character);
