@@ -98,12 +98,12 @@ public static class StringTools
                 continue;
             }
 
-            if (!char.IsLetterOrDigit(value[i]))
+            var character = transliterationMap.TryGetValue(value[i], out var replacement) ? replacement : value[i];
+
+            if (!char.IsAsciiLetterOrDigit(value[i]))
             {
                 continue;
             }
-
-            var character = transliterationMap.TryGetValue(value[i], out var replacement) ? replacement : value[i];
 
             if (char.IsUpper(character))
             {
