@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatAIze.Utilities", "src\ChatAIze.Utilities.csproj", "{B3CF9393-C6DB-4F82-8D5A-090CE471757D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatAIze.Utilities.Preview", "preview\ChatAIze.Utilities.Preview.csproj", "{40BF64D3-BDEA-44A2-8E26-CF6A71FFB77E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{B3CF9393-C6DB-4F82-8D5A-090CE471757D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B3CF9393-C6DB-4F82-8D5A-090CE471757D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B3CF9393-C6DB-4F82-8D5A-090CE471757D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40BF64D3-BDEA-44A2-8E26-CF6A71FFB77E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40BF64D3-BDEA-44A2-8E26-CF6A71FFB77E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40BF64D3-BDEA-44A2-8E26-CF6A71FFB77E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40BF64D3-BDEA-44A2-8E26-CF6A71FFB77E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
