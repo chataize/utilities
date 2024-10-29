@@ -87,18 +87,7 @@ public static class StringTools
 
         for (var i = 0; i < value.Length; ++i)
         {
-            if (value[i] == '_' || value[i] == '-' || value[i] == '.')
-            {
-                if (newLength > 0 && !wasPreviousUnderscore)
-                {
-                    buffer[newLength++] = '_';
-                }
-
-                wasPreviousUnderscore = true;
-                continue;
-            }
-
-            if (char.IsWhiteSpace(value[i]))
+            if (value[i] == '_' || value[i] == '-' || value[i] == '.' || char.IsWhiteSpace(value[i]))
             {
                 if (newLength > 0 && !wasPreviousUnderscore)
                 {
