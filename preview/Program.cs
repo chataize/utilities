@@ -1,6 +1,6 @@
 ﻿using ChatAIze.Utilities;
 
-var input = "  _  __ Hello,  World! UserID HTTP ąĘćÓłż RequestExample 1234.. FIRST.second.Third  _ ";
+var input = "  _  __ Hello, %%&XX *Y  World! UserID HTTP ąĘćÓłż RequestExample 1234.. FIRST.second.Third  _ ";
 
 var snakeLower = input.ToSnakeLower();
 var snakeUpper = input.ToSnakeUpper();
