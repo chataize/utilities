@@ -75,7 +75,7 @@ public static class StringTools
         return new string(buffer);
     }
 
-    public static string ToSnakeCase(string value)
+    public static string ToSnakeCase(this string value)
     {
         Span<char> buffer = value.Length <= 128 ? stackalloc char[value.Length * 2] : new char[value.Length * 2];
 
