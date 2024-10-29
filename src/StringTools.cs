@@ -15,6 +15,24 @@ public static class StringTools
         { 'Ź', 'Z' }, { 'Ż', 'Z' }
     }.ToFrozenDictionary();
 
+    public static string WithFallback(this string? value, params string?[] fallbackValues)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            return value;
+        }
+
+        foreach (var fallbackValue in fallbackValues)
+        {
+            if (!string.IsNullOrWhiteSpace(fallbackValue))
+            {
+                return fallbackValue;
+            }
+        }
+
+        return string.Empty;
+    }
+
     public static string ToAlphanumeric(this string value, SpaceHandling spaceHandling = SpaceHandling.Keep)
     {
         Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length] : new char[value.Length];
