@@ -40,7 +40,7 @@ public static class StringTools
 
         for (int i = 0; i < value.Length; ++i)
         {
-            if (char.IsLetterOrDigit(value[i]))
+            if (char.IsAsciiLetterOrDigit(value[i]))
             {
                 buffer[newLength++] = value[i];
             }
