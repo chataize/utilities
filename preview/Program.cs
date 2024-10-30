@@ -13,3 +13,4 @@ Console.WriteLine($"Snake upper: {snakeUpper}");
 Console.WriteLine($"Kebab lower: {kebabLower}");
 Console.WriteLine($"Kebab upper: {ToKebabUpper}");
 
+Console.WriteLine($"Equal: {input.NormalizedEquals(snakeLower)}");

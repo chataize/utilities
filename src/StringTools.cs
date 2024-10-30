@@ -15,6 +15,74 @@ public static class StringTools
         { 'Ź', 'Z' }, { 'Ż', 'Z' }
     }.ToFrozenDictionary();
 
+    public static bool NormalizedEquals(this string? value, string? other)
+    {
+        if (value is null || other is null)
+        {
+            return value == other;
+        }
+
+        int i = 0, j = 0;
+
+        while (i < value.Length && j < other.Length)
+        {
+            var latinValue = ToLatin(value[i]);
+            var latinOther = ToLatin(other[j]);
+
+            while (!char.IsAsciiLetterOrDigit(latinValue))
+            {
+                if (++i < value.Length)
+                {
+                    latinValue = ToLatin(value[i]);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            while (!char.IsAsciiLetterOrDigit(latinOther))
+            {
+                if (++j < other.Length)
+                {
+                    latinOther = ToLatin(other[j]);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (char.ToLowerInvariant(latinValue) != char.ToLowerInvariant(latinOther))
+            {
+                return false;
+            }
+
+            ++i;
+            ++j;
+        }
+
+        while (i < value.Length)
+        {
+            var latinValue = ToLatin(value[i++]);
+            if (char.IsAsciiLetterOrDigit(latinValue))
+            {
+                return false;
+            }
+        }
+
+        while (j < other.Length)
+        {
+            var latinOther = ToLatin(other[j++]);
+            if (char.IsAsciiLetterOrDigit(latinOther))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static string WithFallback(this string? value, params string?[] fallbackValues)
     {
         if (!string.IsNullOrWhiteSpace(value))
@@ -86,13 +154,18 @@ public static class StringTools
         return new string(buffer[..newLength]);
     }
 
+    public static char ToLatin(char value)
+    {
+        return transliterationMap.TryGetValue(value, out var replacement) ? replacement : value;
+    }
+
     public static string ToLatin(this string value)
     {
         Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length] : new char[value.Length];
 
         for (int i = 0; i < value.Length; ++i)
         {
-            buffer[i] = transliterationMap.TryGetValue(value[i], out var replacement) ? replacement : value[i];
+            buffer[i] = ToLatin(value[i]);
         }
 
         return new string(buffer);
@@ -123,7 +196,7 @@ public static class StringTools
                 continue;
             }
 
-            var character = transliterationMap.TryGetValue(value[i], out var replacement) ? replacement : value[i];
+            var character = ToLatin(value[i]);
 
             if (!char.IsAsciiLetterOrDigit(value[i]))
             {
