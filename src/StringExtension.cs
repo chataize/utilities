@@ -2,7 +2,7 @@
 
 namespace ChatAIze.Utilities;
 
-public static class StringTools
+public static class StringExtension
 {
     private const int MaxStackStringLength = 256;
 
