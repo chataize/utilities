@@ -1,19 +1,8 @@
-﻿using System.Collections.Frozen;
-
-namespace ChatAIze.Utilities;
+﻿namespace ChatAIze.Utilities;
 
 public static class StringExtension
 {
     private const int MaxStackStringLength = 256;
-
-    private static readonly FrozenDictionary<char, char> transliterationMap = new Dictionary<char, char>
-    {
-        { 'ą', 'a' }, { 'ć', 'c' }, { 'ę', 'e' }, { 'ł', 'l' },
-        { 'ń', 'n' }, { 'ó', 'o' }, { 'ś', 's' }, { 'ź', 'z' },
-        { 'ż', 'z' }, { 'Ą', 'A' }, { 'Ć', 'C' }, { 'Ę', 'E' },
-        { 'Ł', 'L' }, { 'Ń', 'N' }, { 'Ó', 'O' }, { 'Ś', 'S' },
-        { 'Ź', 'Z' }, { 'Ż', 'Z' }
-    }.ToFrozenDictionary();
 
     public static bool NormalizedEquals(this string? value, string? other)
     {
@@ -29,14 +18,14 @@ public static class StringExtension
 
         while (i < valueSpan.Length && j < otherSpan.Length)
         {
-            char latinValue = ToLatin(valueSpan[i]);
-            char latinOther = ToLatin(otherSpan[j]);
+            char latinValue = valueSpan[i].ToLatin();
+            char latinOther = otherSpan[j].ToLatin();
 
             while (!char.IsAsciiLetterOrDigit(latinValue))
             {
                 if (++i < valueSpan.Length)
                 {
-                    latinValue = ToLatin(valueSpan[i]);
+                    latinValue = valueSpan[i].ToLatin();
                 }
                 else
                 {
@@ -48,7 +37,7 @@ public static class StringExtension
             {
                 if (++j < otherSpan.Length)
                 {
-                    latinOther = ToLatin(otherSpan[j]);
+                    latinOther = otherSpan[j].ToLatin();
                 }
                 else
                 {
@@ -67,7 +56,7 @@ public static class StringExtension
 
         while (i < valueSpan.Length)
         {
-            char latinValue = ToLatin(valueSpan[i++]);
+            char latinValue = valueSpan[i++].ToLatin();
             if (char.IsAsciiLetterOrDigit(latinValue))
             {
                 return false;
@@ -76,7 +65,7 @@ public static class StringExtension
 
         while (j < otherSpan.Length)
         {
-            char latinOther = ToLatin(otherSpan[j++]);
+            char latinOther = otherSpan[j++].ToLatin();
             if (char.IsAsciiLetterOrDigit(latinOther))
             {
                 return false;
@@ -157,18 +146,13 @@ public static class StringExtension
         return new string(buffer[..newLength]);
     }
 
-    public static char ToLatin(char value)
-    {
-        return transliterationMap.TryGetValue(value, out var replacement) ? replacement : value;
-    }
-
     public static string ToLatin(this string value)
     {
         Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length] : new char[value.Length];
 
         for (int i = 0; i < value.Length; ++i)
         {
-            buffer[i] = ToLatin(value[i]);
+            buffer[i] = value[i].ToLatin();
         }
 
         return new string(buffer);
@@ -199,7 +183,7 @@ public static class StringExtension
                 continue;
             }
 
-            var character = ToLatin(value[i]);
+            var character = value[i].ToLatin();
 
             if (!char.IsAsciiLetterOrDigit(character))
             {
