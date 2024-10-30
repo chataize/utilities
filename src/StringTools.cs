@@ -33,29 +33,52 @@ public static class StringTools
         return string.Empty;
     }
 
-    public static string ToAlphanumeric(this string value, SpaceHandling spaceHandling = SpaceHandling.Keep)
+    public static string ToAlphanumeric(this string value, params char[] additionalChars)
     {
         Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length] : new char[value.Length];
+
         var newLength = 0;
+
+        var containsDash = false;
+        var containsUnderscore = false;
+
+        for (int i = 0; i < additionalChars.Length; ++i)
+        {
+            if (additionalChars[i] == '-')
+            {
+                containsDash = true;
+
+                if (containsUnderscore)
+                {
+                    break;
+                }
+            }
+            else if (additionalChars[i] == '_')
+            {
+                containsUnderscore = true;
+
+                if (containsDash)
+                {
+                    break;
+                }
+            }
+        }
 
         for (int i = 0; i < value.Length; ++i)
         {
-            if (char.IsAsciiLetterOrDigit(value[i]))
+            if (char.IsAsciiLetterOrDigit(value[i]) || additionalChars.Contains(value[i]))
             {
                 buffer[newLength++] = value[i];
             }
-            else if (char.IsWhiteSpace(value[i]))
+            else if (value[i] == '-' || value[i] == '_' || char.IsWhiteSpace(value[i]))
             {
-                switch (spaceHandling)
+                if (containsDash)
                 {
-                    case SpaceHandling.Keep:
-                        buffer[newLength++] = value[i];
-                        break;
-                    case SpaceHandling.Underscore:
-                        buffer[newLength++] = '_';
-                        break;
-                    case SpaceHandling.Remove:
-                        break;
+                    buffer[newLength++] = '-';
+                }
+                else if (containsUnderscore)
+                {
+                    buffer[newLength++] = '_';
                 }
             }
         }
