@@ -4,28 +4,20 @@ public static class StringExtension
 {
     private const int MaxStackStringLength = 256;
 
-    public static bool NormalizedEquals(this string? value, string? other)
+    public static bool NormalizedEquals(this ReadOnlySpan<char> value, ReadOnlySpan<char> other)
     {
-        if (value is null || other is null)
-        {
-            return value == other;
-        }
-
-        ReadOnlySpan<char> valueSpan = value;
-        ReadOnlySpan<char> otherSpan = other;
-
         int i = 0, j = 0;
 
-        while (i < valueSpan.Length && j < otherSpan.Length)
+        while (i < value.Length && j < other.Length)
         {
-            char latinValue = valueSpan[i].ToLatin();
-            char latinOther = otherSpan[j].ToLatin();
+            char latinValue = value[i].ToLatin();
+            char latinOther = other[j].ToLatin();
 
             while (!char.IsAsciiLetterOrDigit(latinValue))
             {
-                if (++i < valueSpan.Length)
+                if (++i < value.Length)
                 {
-                    latinValue = valueSpan[i].ToLatin();
+                    latinValue = value[i].ToLatin();
                 }
                 else
                 {
@@ -35,9 +27,9 @@ public static class StringExtension
 
             while (!char.IsAsciiLetterOrDigit(latinOther))
             {
-                if (++j < otherSpan.Length)
+                if (++j < other.Length)
                 {
-                    latinOther = otherSpan[j].ToLatin();
+                    latinOther = other[j].ToLatin();
                 }
                 else
                 {
@@ -54,18 +46,18 @@ public static class StringExtension
             ++j;
         }
 
-        while (i < valueSpan.Length)
+        while (i < value.Length)
         {
-            char latinValue = valueSpan[i++].ToLatin();
+            char latinValue = value[i++].ToLatin();
             if (char.IsAsciiLetterOrDigit(latinValue))
             {
                 return false;
             }
         }
 
-        while (j < otherSpan.Length)
+        while (j < other.Length)
         {
-            char latinOther = otherSpan[j++].ToLatin();
+            char latinOther = other[j++].ToLatin();
             if (char.IsAsciiLetterOrDigit(latinOther))
             {
                 return false;
@@ -73,6 +65,16 @@ public static class StringExtension
         }
 
         return true;
+    }
+
+    public static bool NormalizedEquals(this string? value, string? other)
+    {
+        if (value is null || other is null)
+        {
+            return value == other;
+        }
+
+        return value.AsSpan().NormalizedEquals(other.AsSpan());
     }
 
     public static string WithFallback(this string? value, params string?[] fallbackValues)
@@ -93,7 +95,7 @@ public static class StringExtension
         return string.Empty;
     }
 
-    public static string ToAlphanumeric(this string value, params char[] additionalChars)
+    public static string ToAlphanumeric(this ReadOnlySpan<char> value, params char[] additionalChars)
     {
         Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length] : new char[value.Length];
 
@@ -146,7 +148,12 @@ public static class StringExtension
         return new string(buffer[..newLength]);
     }
 
-    public static string ToLatin(this string value)
+    public static string ToAlphanumeric(this string value, params char[] additionalChars)
+    {
+        return value.AsSpan().ToAlphanumeric(additionalChars);
+    }
+
+    public static string ToLatin(this ReadOnlySpan<char> value)
     {
         Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length] : new char[value.Length];
 
@@ -158,7 +165,12 @@ public static class StringExtension
         return new string(buffer);
     }
 
-    public static string ToSeparated(string value, char separator, bool upper = false)
+    public static string ToLatin(this string value)
+    {
+        return value.AsSpan().ToLatin();
+    }
+
+    public static string ToSeparated(this ReadOnlySpan<char> value, char separator, bool upper = false)
     {
         var maxUnderscores = value.Length / 2 + 1;
 
@@ -214,6 +226,11 @@ public static class StringExtension
         }
 
         return new string(buffer[..actualLength]);
+    }
+
+    public static string ToSeparated(this string value, char separator, bool upper = false)
+    {
+        return value.AsSpan().ToSeparated(separator, upper);
     }
 
     public static string ToSnakeLower(this string value)
