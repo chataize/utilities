@@ -22,18 +22,21 @@ public static class StringTools
             return value == other;
         }
 
+        ReadOnlySpan<char> valueSpan = value;
+        ReadOnlySpan<char> otherSpan = other;
+
         int i = 0, j = 0;
 
-        while (i < value.Length && j < other.Length)
+        while (i < valueSpan.Length && j < otherSpan.Length)
         {
-            var latinValue = ToLatin(value[i]);
-            var latinOther = ToLatin(other[j]);
+            char latinValue = ToLatin(valueSpan[i]);
+            char latinOther = ToLatin(otherSpan[j]);
 
             while (!char.IsAsciiLetterOrDigit(latinValue))
             {
-                if (++i < value.Length)
+                if (++i < valueSpan.Length)
                 {
-                    latinValue = ToLatin(value[i]);
+                    latinValue = ToLatin(valueSpan[i]);
                 }
                 else
                 {
@@ -43,9 +46,9 @@ public static class StringTools
 
             while (!char.IsAsciiLetterOrDigit(latinOther))
             {
-                if (++j < other.Length)
+                if (++j < otherSpan.Length)
                 {
-                    latinOther = ToLatin(other[j]);
+                    latinOther = ToLatin(otherSpan[j]);
                 }
                 else
                 {
@@ -62,18 +65,18 @@ public static class StringTools
             ++j;
         }
 
-        while (i < value.Length)
+        while (i < valueSpan.Length)
         {
-            var latinValue = ToLatin(value[i++]);
+            char latinValue = ToLatin(valueSpan[i++]);
             if (char.IsAsciiLetterOrDigit(latinValue))
             {
                 return false;
             }
         }
 
-        while (j < other.Length)
+        while (j < otherSpan.Length)
         {
-            var latinOther = ToLatin(other[j++]);
+            char latinOther = ToLatin(otherSpan[j++]);
             if (char.IsAsciiLetterOrDigit(latinOther))
             {
                 return false;
