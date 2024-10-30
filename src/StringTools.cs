@@ -198,7 +198,7 @@ public static class StringTools
 
             var character = ToLatin(value[i]);
 
-            if (!char.IsAsciiLetterOrDigit(value[i]))
+            if (!char.IsAsciiLetterOrDigit(character))
             {
                 continue;
             }
