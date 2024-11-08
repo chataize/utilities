@@ -10,6 +10,14 @@ public static class StringExtension
 
         while (i < value.Length && j < other.Length)
         {
+            if (value[i] == other[j])
+            {
+                ++i;
+                ++j;
+
+                continue;
+            }
+
             char latinValue = value[i].ToLatin();
             char latinOther = other[j].ToLatin();
 
