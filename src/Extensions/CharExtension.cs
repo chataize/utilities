@@ -1,6 +1,6 @@
 using System.Collections.Frozen;
 
-namespace ChatAIze.Utilities;
+namespace ChatAIze.Utilities.Extensions;
 
 public static class CharExtension
 {

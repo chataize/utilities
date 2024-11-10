@@ -1,4 +1,4 @@
-namespace ChatAIze.Utilities;
+namespace ChatAIze.Utilities.Extensions;
 
 public static class DateTimeOffsetExtension
 {
