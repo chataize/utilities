@@ -1,4 +1,4 @@
-﻿using ChatAIze.Utilities;
+﻿using ChatAIze.Utilities.Extensions;
 
 var input = "  _  __ Hello, %%&XX *Y  World! UserID HTTP ąĘćÓłż RequestExample 1234.. FIRST.second.Third  _ ";
 
