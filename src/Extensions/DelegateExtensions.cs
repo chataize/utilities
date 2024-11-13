@@ -12,9 +12,9 @@ public static class DelegateExtensions
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
-    public static string GetNormalizedMethodName(this Delegate @delegate)
+    public static string GetNormalizedMethodName(this Delegate callback)
     {
-        var name = @delegate.Method.Name;
+        var name = callback.Method.Name;
 
         if (!name.Contains("<<"))
         {
