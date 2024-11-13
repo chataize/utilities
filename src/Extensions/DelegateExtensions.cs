@@ -1,6 +1,5 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using ChatAIze.Abstractions.Actions;
 using ChatAIze.Abstractions.Chat;
 
 namespace ChatAIze.Utilities.Extensions;
