@@ -34,9 +34,82 @@ public static class DelegateExtensions
 
     public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, string? arguments, IFunctionContext? functionContext = null, CancellationToken cancellationToken = default)
     {
-        var argumentsDictionary = ParseJsonArguments(arguments);
-        var parsedArguments = ParseArguments(callback, argumentsDictionary, functionContext, cancellationToken);
-        var invocationResult = await InvokeDelegateAsync(callback, [.. parsedArguments]);
+        var parsedArguments = new List<object?>();
+        using var argumentsDocument = arguments is not null ? JsonDocument.Parse(arguments) : JsonDocument.Parse("{}");
+
+        foreach (var parameter in callback.Method.GetParameters())
+        {
+            if (parameter.ParameterType == typeof(IFunctionContext))
+            {
+                parsedArguments.Add(functionContext);
+                continue;
+            }
+
+            if (parameter.ParameterType == typeof(CancellationToken))
+            {
+                parsedArguments.Add(cancellationToken);
+                continue;
+            }
+
+            if (argumentsDocument.RootElement.TryGetProperty(parameter.Name!.ToSnakeLower(), out var argument) && argument.ValueKind != JsonValueKind.Null)
+            {
+                var rawValue = argument.GetRawText();
+                var stringValue = argument.ValueKind == JsonValueKind.String ? argument.GetString() : rawValue;
+
+                try
+                {
+                    if (parameter.ParameterType.IsEnum)
+                    {
+                        if (!Enum.TryParse(parameter.ParameterType, stringValue!.Replace("_", ""), true, out var enumValue))
+                        {
+                            return $"Error: Value '{stringValue}' is not a valid enum member for parameter '{parameter.Name}'.";
+                        }
+
+                        parsedArguments.Add(enumValue);
+                    }
+                    else
+                    {
+                        var parsedValue = JsonSerializer.Deserialize(rawValue, parameter.ParameterType);
+                        parsedArguments.Add(parsedValue);
+                    }
+                }
+                catch
+                {
+                    return $"Error: Value '{stringValue}' is not valid for parameter '{parameter.Name}'. Expected type: '{parameter.ParameterType.Name}'.";
+                }
+            }
+            else if (parameter.IsOptional && parameter.DefaultValue != DBNull.Value)
+            {
+                parsedArguments.Add(parameter.DefaultValue);
+            }
+            else
+            {
+                return $"Error: You must provide a value for the required parameter '{parameter.Name}'.";
+            }
+        }
+
+        var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
+
+        if (invocationResult is Task task)
+        {
+            await task.ConfigureAwait(false);
+
+            var taskResultProperty = task.GetType().GetProperty("Result");
+            if (taskResultProperty is not null)
+            {
+                invocationResult = taskResultProperty.GetValue(task);
+            }
+        }
+        else if (invocationResult is ValueTask valueTask)
+        {
+            await valueTask.ConfigureAwait(false);
+
+            var taskResultProperty = valueTask.GetType().GetProperty("Result");
+            if (taskResultProperty is not null)
+            {
+                invocationResult = taskResultProperty.GetValue(valueTask);
+            }
+        }
 
         if (invocationResult is null)
         {
@@ -53,8 +126,63 @@ public static class DelegateExtensions
 
     public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, IDictionary<string, object?> arguments, IActionContext? actionContext = null, CancellationToken cancellationToken = default)
     {
-        var parsedArguments = ParseArguments(callback, arguments, actionContext, cancellationToken);
-        var invocationResult = await InvokeDelegateAsync(callback, [.. parsedArguments]);
+        var parsedArguments = new List<object?>();
+
+        foreach (var parameter in callback.Method.GetParameters())
+        {
+            if (parameter.ParameterType == typeof(IActionContext))
+            {
+                parsedArguments.Add(actionContext);
+                continue;
+            }
+
+            if (parameter.ParameterType == typeof(CancellationToken))
+            {
+                parsedArguments.Add(cancellationToken);
+                continue;
+            }
+
+            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && argument is not null)
+            {
+                if (argument.GetType() != parameter.GetType())
+                {
+                    throw new Exception($"Argument type mismatch for parameter '{parameter.Name}'. Expected type: '{parameter.GetType().Name}'.");
+                }
+
+                parsedArguments.Add(argument);
+            }
+            else if (parameter.IsOptional && parameter.DefaultValue != DBNull.Value)
+            {
+                parsedArguments.Add(parameter.DefaultValue);
+            }
+            else
+            {
+                throw new Exception($"Argument missing for non-nullable parameter '{parameter.Name}'.");
+            }
+        }
+
+        var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
+
+        if (invocationResult is Task task)
+        {
+            await task.ConfigureAwait(false);
+
+            var taskResultProperty = task.GetType().GetProperty("Result");
+            if (taskResultProperty is not null)
+            {
+                invocationResult = taskResultProperty.GetValue(task);
+            }
+        }
+        else if (invocationResult is ValueTask valueTask)
+        {
+            await valueTask.ConfigureAwait(false);
+
+            var taskResultProperty = valueTask.GetType().GetProperty("Result");
+            if (taskResultProperty is not null)
+            {
+                invocationResult = taskResultProperty.GetValue(valueTask);
+            }
+        }
 
         if (invocationResult is null)
         {
@@ -69,10 +197,65 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
-    public static async ValueTask<(bool, string?)> InvokeForCallbackResultAsync(this Delegate callback, IDictionary<string, object?> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<(bool, string?)> InvokeForCallbackResultAsync(this Delegate callback, IDictionary<string, object?> arguments, IFunctionCondition? conditionContext = null, CancellationToken cancellationToken = default)
     {
-        var parsedArguments = ParseArguments(callback, arguments, conditionContext, cancellationToken);
-        var invocationResult = await InvokeDelegateAsync(callback, [.. parsedArguments]);
+        var parsedArguments = new List<object?>();
+
+        foreach (var parameter in callback.Method.GetParameters())
+        {
+            if (parameter.ParameterType == typeof(IConditionContext))
+            {
+                parsedArguments.Add(conditionContext);
+                continue;
+            }
+
+            if (parameter.ParameterType == typeof(CancellationToken))
+            {
+                parsedArguments.Add(cancellationToken);
+                continue;
+            }
+
+            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && argument is not null)
+            {
+                if (argument.GetType() != parameter.GetType())
+                {
+                    throw new Exception($"Argument type mismatch for parameter '{parameter.Name}'. Expected type: '{parameter.GetType().Name}'.");
+                }
+
+                parsedArguments.Add(argument);
+            }
+            else if (parameter.IsOptional && parameter.DefaultValue != DBNull.Value)
+            {
+                parsedArguments.Add(parameter.DefaultValue);
+            }
+            else
+            {
+                throw new Exception($"Argument missing for non-nullable parameter '{parameter.Name}'.");
+            }
+        }
+
+        var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
+
+        if (invocationResult is Task task)
+        {
+            await task.ConfigureAwait(false);
+
+            var taskResultProperty = task.GetType().GetProperty("Result");
+            if (taskResultProperty is not null)
+            {
+                invocationResult = taskResultProperty.GetValue(task);
+            }
+        }
+        else if (invocationResult is ValueTask valueTask)
+        {
+            await valueTask.ConfigureAwait(false);
+
+            var taskResultProperty = valueTask.GetType().GetProperty("Result");
+            if (taskResultProperty is not null)
+            {
+                invocationResult = taskResultProperty.GetValue(valueTask);
+            }
+        }
 
         if (invocationResult is true)
         {
@@ -90,98 +273,5 @@ public static class DelegateExtensions
         }
 
         return (false, JsonSerializer.Serialize(invocationResult, JsonOptions));
-    }
-
-    private static Dictionary<string, object?> ParseJsonArguments(string? arguments)
-    {
-        using var document = arguments is not null ? JsonDocument.Parse(arguments) : JsonDocument.Parse("{}");
-        var argumentsDictionary = new Dictionary<string, object?>();
-
-        foreach (var property in document.RootElement.EnumerateObject())
-        {
-            argumentsDictionary[property.Name] = property.Value.Deserialize<object>();
-        }
-
-        return argumentsDictionary;
-    }
-
-    private static List<object?> ParseArguments(Delegate callback, IDictionary<string, object?> arguments, IConditionContext? context, CancellationToken cancellationToken)
-    {
-        var parsedArguments = new List<object?>();
-
-        foreach (var parameter in callback.Method.GetParameters())
-        {
-            if (parameter.ParameterType is IFunctionContext && context is IFunctionContext functionContext)
-            {
-                parsedArguments.Add(functionContext);
-                continue;
-            }
-
-            if (parameter.ParameterType is IActionContext && context is IActionContext actionContext)
-            {
-                parsedArguments.Add(actionContext);
-                continue;
-            }
-
-            if (parameter.ParameterType is IConditionContext && context is IConditionContext conditionContext)
-            {
-                parsedArguments.Add(conditionContext);
-                continue;
-            }
-
-            if (parameter.ParameterType == typeof(CancellationToken))
-            {
-                parsedArguments.Add(cancellationToken);
-                continue;
-            }
-
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && argument is not null)
-            {
-                if (argument.GetType() != parameter.ParameterType)
-                {
-                    throw new Exception($"Argument type mismatch for parameter '{parameter.Name}'. Expected type: '{parameter.ParameterType.Name}'.");
-                }
-
-                parsedArguments.Add(argument);
-            }
-            else if (parameter.IsOptional && parameter.DefaultValue != DBNull.Value)
-            {
-                parsedArguments.Add(parameter.DefaultValue);
-            }
-            else
-            {
-                throw new Exception($"Argument missing for non-nullable parameter '{parameter.Name}'.");
-            }
-        }
-
-        return parsedArguments;
-    }
-
-    private static async ValueTask<object?> InvokeDelegateAsync(Delegate callback, object?[] parsedArguments)
-    {
-        var invocationResult = callback.DynamicInvoke(parsedArguments);
-
-        if (invocationResult is Task task)
-        {
-            await task.ConfigureAwait(false);
-
-            var resultProperty = task.GetType().GetProperty("Result");
-            if (resultProperty is not null)
-            {
-                return resultProperty.GetValue(task);
-            }
-        }
-        else if (invocationResult is ValueTask valueTask)
-        {
-            await valueTask.ConfigureAwait(false);
-
-            var resultProperty = valueTask.GetType().GetProperty("Result");
-            if (resultProperty is not null)
-            {
-                return resultProperty.GetValue(valueTask);
-            }
-        }
-
-        return invocationResult;
     }
 }
