@@ -14,3 +14,13 @@ Console.WriteLine($"Kebab lower: {kebabLower}");
 Console.WriteLine($"Kebab upper: {ToKebabUpper}");
 
 Console.WriteLine($"Equal: {input.NormalizedEquals(snakeLower)}");
+
+var sentence = "A quick brown {animal1} jumps over the lazy {animal2}.";
+var placeholder = new Dictionary<string, string>
+{
+    { "animal1", "fox" },
+    { "animal2", "dog" }
+};
+
+var result = sentence.WithPlaceholderValues(placeholder);
+Console.WriteLine($"Result: {result}");
