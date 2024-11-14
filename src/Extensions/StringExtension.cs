@@ -270,6 +270,7 @@ public static class StringExtension
         foreach (var placeholder in placeholders)
         {
             result.Replace($"{{{placeholder.Key}}}", placeholder.Value);
+            result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", placeholder.Value);
         }
 
         return result.ToString();
