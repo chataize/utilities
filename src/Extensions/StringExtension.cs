@@ -260,4 +260,16 @@ public static class StringExtension
     {
         return ToSeparated(value, '-', upper: true);
     }
+
+    public static string WithPlaceholderValues(this string value, params IEnumerable<KeyValuePair<string, string>> placeholders)
+    {
+        var result = value;
+
+        foreach (var placeholder in placeholders)
+        {
+            result = result.Replace($"{{{placeholder.Key}}}", placeholder.Value);
+        }
+
+        return result;
+    }
 }
