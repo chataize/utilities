@@ -1,4 +1,6 @@
-﻿namespace ChatAIze.Utilities.Extensions;
+﻿using System.Text;
+
+namespace ChatAIze.Utilities.Extensions;
 
 public static class StringExtension
 {
@@ -263,13 +265,13 @@ public static class StringExtension
 
     public static string WithPlaceholderValues(this string value, params IEnumerable<KeyValuePair<string, string>> placeholders)
     {
-        var result = value;
+        var result = new StringBuilder(value);
 
         foreach (var placeholder in placeholders)
         {
-            result = result.Replace($"{{{placeholder.Key}}}", placeholder.Value);
+            result.Replace($"{{{placeholder.Key}}}", placeholder.Value);
         }
 
-        return result;
+        return result.ToString();
     }
 }
