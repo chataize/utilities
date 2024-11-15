@@ -275,4 +275,17 @@ public static class StringExtension
 
         return result.ToString();
     }
+
+    public static string WithPlaceholderValues(this string value, params IEnumerable<KeyValuePair<string, object>> placeholders)
+    {
+        var result = new StringBuilder(value);
+
+        foreach (var placeholder in placeholders)
+        {
+            result.Replace($"{{{placeholder.Key}}}", placeholder.Value.ToString());
+            result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", placeholder.Value.ToString());
+        }
+
+        return result.ToString();
+    }
 }
