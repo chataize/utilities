@@ -275,7 +275,7 @@ public static class DelegateExtensions
         return (false, JsonSerializer.Serialize(invocationResult, JsonOptions));
     }
 
-    public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IDictionary<string, JsonElement> arguments, IFunctionCondition? conditionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<bool> InvokeForPreconditionResultAsync(this Delegate callback, IDictionary<string, JsonElement> arguments, IFunctionCondition? conditionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
 
@@ -333,19 +333,9 @@ public static class DelegateExtensions
 
         if (invocationResult is true)
         {
-            return (true, null);
+            return true;
         }
 
-        if (invocationResult is null)
-        {
-            return (false, null);
-        }
-
-        if (invocationResult is string stringResult)
-        {
-            return (false, stringResult);
-        }
-
-        return (false, JsonSerializer.Serialize(invocationResult, JsonOptions));
+        return false;
     }
 }
