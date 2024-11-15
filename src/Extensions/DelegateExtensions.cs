@@ -293,7 +293,7 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument))
+            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
             {
                 var deserializedArgument = argument.Deserialize(parameter.ParameterType);
                 parsedArguments.Add(argument);
