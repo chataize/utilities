@@ -32,10 +32,10 @@ public static class DelegateExtensions
         return name[(start + 2)..end];
     }
 
-    public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, string? arguments, IFunctionContext? functionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, string arguments, IFunctionContext? functionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
-        using var argumentsDocument = arguments is not null ? JsonDocument.Parse(arguments) : JsonDocument.Parse("{}");
+        using var argumentsDocument = JsonDocument.Parse(arguments);
 
         foreach (var parameter in callback.Method.GetParameters())
         {
@@ -124,7 +124,7 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
-    public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, IDictionary<string, object?> arguments, IActionContext? actionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, IDictionary<string, object> arguments, IActionContext? actionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
 
@@ -142,7 +142,7 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && argument is not null)
+            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument))
             {
                 if (argument.GetType() != parameter.GetType())
                 {
@@ -197,7 +197,7 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
-    public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IDictionary<string, object?> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IDictionary<string, object> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
 
@@ -215,7 +215,7 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && argument is not null)
+            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument))
             {
                 if (argument.GetType() != parameter.GetType())
                 {
