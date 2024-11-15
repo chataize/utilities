@@ -77,15 +77,17 @@ public static class DelegateExtensions
                 {
                     return $"Error: Value '{stringValue}' is not valid for parameter '{parameter.Name}'. Expected type: '{parameter.ParameterType.Name}'.";
                 }
+
+                continue;
             }
-            else if (parameter.IsOptional && parameter.DefaultValue != DBNull.Value)
+
+            if (parameter.IsOptional)
             {
                 parsedArguments.Add(parameter.DefaultValue);
+                continue;
             }
-            else
-            {
-                return $"Error: You must provide a value for the required parameter '{parameter.Name}'.";
-            }
+
+            return $"Error: Value missing for required parameter '{parameter.Name}'.";
         }
 
         var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
@@ -124,7 +126,7 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
-    public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, IDictionary<string, object> arguments, IActionContext? actionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, IDictionary<string, JsonElement> arguments, IActionContext? actionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
 
@@ -142,23 +144,19 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument))
+            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
             {
-                if (argument.GetType() != parameter.GetType())
-                {
-                    throw new Exception($"Argument type mismatch for parameter '{parameter.Name}'. Expected type: '{parameter.GetType().Name}'.");
-                }
-
-                parsedArguments.Add(argument);
+                parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
+                continue;
             }
-            else if (parameter.IsOptional && parameter.DefaultValue != DBNull.Value)
+
+            if (parameter.IsOptional)
             {
                 parsedArguments.Add(parameter.DefaultValue);
+                continue;
             }
-            else
-            {
-                throw new Exception($"Argument missing for non-nullable parameter '{parameter.Name}'.");
-            }
+
+            return $"Value missing for required parameter '{parameter.Name}'.";
         }
 
         var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
@@ -197,7 +195,7 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
-    public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IDictionary<string, object> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IDictionary<string, JsonElement> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
 
@@ -215,23 +213,19 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument))
+            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
             {
-                if (argument.GetType() != parameter.GetType())
-                {
-                    throw new Exception($"Argument type mismatch for parameter '{parameter.Name}'. Expected type: '{parameter.GetType().Name}'.");
-                }
-
-                parsedArguments.Add(argument);
+                parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
+                continue;
             }
-            else if (parameter.IsOptional && parameter.DefaultValue != DBNull.Value)
+
+            if (parameter.IsOptional)
             {
                 parsedArguments.Add(parameter.DefaultValue);
+                continue;
             }
-            else
-            {
-                throw new Exception($"Argument missing for non-nullable parameter '{parameter.Name}'.");
-            }
+
+            throw new Exception($"Value missing for required parameter '{parameter.Name}'.");
         }
 
         var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
@@ -273,69 +267,5 @@ public static class DelegateExtensions
         }
 
         return (false, JsonSerializer.Serialize(invocationResult, JsonOptions));
-    }
-
-    public static async ValueTask<bool> InvokeForPreconditionResultAsync(this Delegate callback, IDictionary<string, JsonElement> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
-    {
-        var parsedArguments = new List<object?>();
-
-        foreach (var parameter in callback.Method.GetParameters())
-        {
-            if (parameter.ParameterType == typeof(IConditionContext))
-            {
-                parsedArguments.Add(conditionContext);
-                continue;
-            }
-
-            if (parameter.ParameterType == typeof(CancellationToken))
-            {
-                parsedArguments.Add(cancellationToken);
-                continue;
-            }
-
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
-            {
-                var deserializedArgument = argument.Deserialize(parameter.ParameterType);
-                parsedArguments.Add(argument);
-            }
-            else if (parameter.IsOptional && parameter.DefaultValue != DBNull.Value)
-            {
-                parsedArguments.Add(parameter.DefaultValue);
-            }
-            else
-            {
-                throw new Exception($"Argument missing for non-nullable parameter '{parameter.Name}'.");
-            }
-        }
-
-        var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
-
-        if (invocationResult is Task task)
-        {
-            await task.ConfigureAwait(false);
-
-            var taskResultProperty = task.GetType().GetProperty("Result");
-            if (taskResultProperty is not null)
-            {
-                invocationResult = taskResultProperty.GetValue(task);
-            }
-        }
-        else if (invocationResult is ValueTask valueTask)
-        {
-            await valueTask.ConfigureAwait(false);
-
-            var taskResultProperty = valueTask.GetType().GetProperty("Result");
-            if (taskResultProperty is not null)
-            {
-                invocationResult = taskResultProperty.GetValue(valueTask);
-            }
-        }
-
-        if (invocationResult is true)
-        {
-            return true;
-        }
-
-        return false;
     }
 }
