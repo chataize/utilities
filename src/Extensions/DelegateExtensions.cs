@@ -197,7 +197,7 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
-    public static async ValueTask<(bool, string?)> InvokeForCallbackResultAsync(this Delegate callback, IDictionary<string, object?> arguments, IFunctionCondition? conditionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IDictionary<string, object?> arguments, IFunctionCondition? conditionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
 
