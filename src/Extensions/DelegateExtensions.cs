@@ -92,6 +92,11 @@ public static class DelegateExtensions
 
         var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
 
+        if (invocationResult is null)
+        {
+            return "OK: Function executed successfully.";
+        }
+
         if (invocationResult is Task task)
         {
             await task.ConfigureAwait(false);
@@ -102,15 +107,15 @@ public static class DelegateExtensions
                 invocationResult = taskResultProperty.GetValue(task);
             }
         }
+        else if (invocationResult.GetType().IsGenericType && invocationResult.GetType().GetGenericTypeDefinition() == typeof(ValueTask<>))
+        {
+            dynamic dynamicValueTask = invocationResult;
+            invocationResult = await dynamicValueTask.ConfigureAwait(false);
+        }
         else if (invocationResult is ValueTask valueTask)
         {
             await valueTask.ConfigureAwait(false);
-
-            var taskResultProperty = valueTask.GetType().GetProperty("Result");
-            if (taskResultProperty is not null)
-            {
-                invocationResult = taskResultProperty.GetValue(valueTask);
-            }
+            invocationResult = null;
         }
 
         if (invocationResult is null)
@@ -161,6 +166,11 @@ public static class DelegateExtensions
 
         var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
 
+        if (invocationResult is null)
+        {
+            return "OK: Action executed successfully.";
+        }
+
         if (invocationResult is Task task)
         {
             await task.ConfigureAwait(false);
@@ -171,15 +181,15 @@ public static class DelegateExtensions
                 invocationResult = taskResultProperty.GetValue(task);
             }
         }
+        else if (invocationResult.GetType().IsGenericType && invocationResult.GetType().GetGenericTypeDefinition() == typeof(ValueTask<>))
+        {
+            dynamic dynamicValueTask = invocationResult;
+            invocationResult = await dynamicValueTask.ConfigureAwait(false);
+        }
         else if (invocationResult is ValueTask valueTask)
         {
             await valueTask.ConfigureAwait(false);
-
-            var taskResultProperty = valueTask.GetType().GetProperty("Result");
-            if (taskResultProperty is not null)
-            {
-                invocationResult = taskResultProperty.GetValue(valueTask);
-            }
+            invocationResult = null;
         }
 
         if (invocationResult is null)
@@ -230,6 +240,11 @@ public static class DelegateExtensions
 
         var invocationResult = callback.DynamicInvoke([.. parsedArguments]);
 
+        if (invocationResult is null)
+        {
+            return (false, null);
+        }
+
         if (invocationResult is Task task)
         {
             await task.ConfigureAwait(false);
@@ -240,15 +255,15 @@ public static class DelegateExtensions
                 invocationResult = taskResultProperty.GetValue(task);
             }
         }
+        else if (invocationResult.GetType().IsGenericType && invocationResult.GetType().GetGenericTypeDefinition() == typeof(ValueTask<>))
+        {
+            dynamic dynamicValueTask = invocationResult;
+            invocationResult = await dynamicValueTask.ConfigureAwait(false);
+        }
         else if (invocationResult is ValueTask valueTask)
         {
             await valueTask.ConfigureAwait(false);
-
-            var taskResultProperty = valueTask.GetType().GetProperty("Result");
-            if (taskResultProperty is not null)
-            {
-                invocationResult = taskResultProperty.GetValue(valueTask);
-            }
+            invocationResult = null;
         }
 
         if (invocationResult is true)
