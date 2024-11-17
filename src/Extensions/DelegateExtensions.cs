@@ -149,7 +149,7 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
+            if (arguments.TryGetValue(parameter.Name!, out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
             {
                 parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
                 continue;
@@ -223,7 +223,7 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
+            if (arguments.TryGetValue(parameter.Name!, out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
             {
                 parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
                 continue;
