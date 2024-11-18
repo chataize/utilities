@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace ChatAIze.Utilities.Extensions;
 
@@ -183,8 +183,7 @@ public static class StringExtension
     public static string ToSeparated(this ReadOnlySpan<char> value, char separator, bool upper = false)
     {
         var maxUnderscores = value.Length / 2 + 1;
-
-        Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length + maxUnderscores] : new char[value.Length + maxUnderscores];
+        Span<char> buffer = value.Length + maxUnderscores <= MaxStackStringLength ? stackalloc char[value.Length + maxUnderscores] : new char[value.Length + maxUnderscores];
 
         var newLength = 0;
         var actualLength = 0;
