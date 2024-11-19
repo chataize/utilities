@@ -323,12 +323,19 @@ public static class StringExtension
     {
         foreach (var part in path)
         {
-            element = element.GetProperty(part);
+            if (element.TryGetProperty(part, out var childElement))
+            {
+                element = childElement;
+            }
+            else
+            {
+                return "<invalid property>";
+            }
         }
 
         if (element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
         {
-            throw new InvalidOperationException("Placeholder value cannot be null or undefined.");
+            return "<no value>";
         }
 
         if (element.ValueKind == JsonValueKind.String)

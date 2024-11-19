@@ -7,7 +7,7 @@ var jsonOptions = new JsonSerializerOptions
     PropertyNameCaseInsensitive = true
 };
 
-var text = "{The quick {animal.color} {animal:name} {action} the lazy {age} years {} old {xx.l} dog}";
+var text = "{The quick {animal.color} {animal:name} {animal.x} {action} the lazy {age} years {} old {xx.l} dog}";
 var animal = new { Name = "fox", Color = "brown" };
 var animalElement = JsonSerializer.SerializeToElement(animal, jsonOptions);
 var actionElement = JsonSerializer.SerializeToElement("jumps over", jsonOptions);
