@@ -1,9 +1,17 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace ChatAIze.Utilities.Extensions;
 
 public static class DictionaryExtensions
 {
+    private static JsonSerializerOptions JsonOptions { get; } = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        PropertyNameCaseInsensitive = true,
+    };
+
     public static Dictionary<string, object> WithPlaceholderValues(this IDictionary<string, object> dictionary, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
         var newDictionary = new Dictionary<string, object>(dictionary);
@@ -30,7 +38,7 @@ public static class DictionaryExtensions
                 var rawText = newDictionary[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
-                newDictionary[key] = JsonSerializer.SerializeToElement(newText);
+                newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
             }
         }
 
@@ -48,7 +56,7 @@ public static class DictionaryExtensions
                 var rawText = newDictionary[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
-                newDictionary[key] = JsonSerializer.SerializeToElement(newText);
+                newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
             }
         }
 
