@@ -27,7 +27,10 @@ public static class DictionaryExtensions
         {
             if (newDictionary[key].ValueKind == JsonValueKind.String)
             {
-                newDictionary[key] = JsonSerializer.SerializeToElement((newDictionary[key].GetString() ?? string.Empty).WithPlaceholderValues(placeholders));
+                var rawText = newDictionary[key].GetRawText() ?? string.Empty;
+                var newText = rawText.WithPlaceholderValues(placeholders);
+
+                newDictionary[key] = JsonSerializer.SerializeToElement(newText);
             }
         }
 
@@ -42,7 +45,10 @@ public static class DictionaryExtensions
         {
             if (newDictionary[key].ValueKind == JsonValueKind.String)
             {
-                newDictionary[key] = JsonSerializer.SerializeToElement((newDictionary[key].GetString() ?? string.Empty).WithPlaceholderValues(placeholders));
+                var rawText = newDictionary[key].GetRawText() ?? string.Empty;
+                var newText = rawText.WithPlaceholderValues(placeholders);
+
+                newDictionary[key] = JsonSerializer.SerializeToElement(newText);
             }
         }
 
