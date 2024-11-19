@@ -1,26 +1,25 @@
-﻿using ChatAIze.Utilities.Extensions;
+﻿using System.Text.Json;
+using ChatAIze.Utilities.Extensions;
 
-var input = "  _  __ Hello, %%&XX *Y  World! UserID HTTP ąĘćÓłż RequestExample 1234.. FIRST.second.Third  _ ";
-
-var snakeLower = input.ToSnakeLower();
-var snakeUpper = input.ToSnakeUpper();
-var kebabLower = input.ToKebabLower();
-var ToKebabUpper = input.ToKebabUpper();
-
-Console.WriteLine($"Input: {input}");
-Console.WriteLine($"Snake lower: {snakeLower}");
-Console.WriteLine($"Snake upper: {snakeUpper}");
-Console.WriteLine($"Kebab lower: {kebabLower}");
-Console.WriteLine($"Kebab upper: {ToKebabUpper}");
-
-Console.WriteLine($"Equal: {input.NormalizedEquals(snakeLower)}");
-
-var sentence = "A quick brown {animal1} jumps over the lazy {animal2}.";
-var placeholder = new Dictionary<string, string>
+var jsonOptions = new JsonSerializerOptions
 {
-    { "animal1", "fox" },
-    { "animal2", "dog" }
+    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+    PropertyNameCaseInsensitive = true
 };
 
-var result = sentence.WithPlaceholderValues(placeholder);
-Console.WriteLine($"Result: {result}");
+var text = "The quick {animal.color} {animal:name} {action} the lazy {age} years old dog";
+var animal = new { Name = "fox", Color = "brown" };
+var animalElement = JsonSerializer.SerializeToElement(animal, jsonOptions);
+var actionElement = JsonSerializer.SerializeToElement("jumps over", jsonOptions);
+var ageElement = JsonSerializer.SerializeToElement(5, jsonOptions);
+
+// case insensitive
+var placeholders = new Dictionary<string, JsonElement>(StringComparer.InvariantCultureIgnoreCase)
+{
+    { "animal", animalElement },
+    { "action", actionElement },
+    { "age", ageElement }
+};
+
+var result = text.WithPlaceholderValues(placeholders);
+Console.WriteLine(result);

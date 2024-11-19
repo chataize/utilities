@@ -1,4 +1,5 @@
-using System.Text;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace ChatAIze.Utilities.Extensions;
 
@@ -286,5 +287,52 @@ public static class StringExtension
         }
 
         return result.ToString();
+    }
+
+    public static string WithPlaceholderValues(this string value, IReadOnlyDictionary<string, JsonElement> placeholders)
+    {
+        var begin = -1;
+        var valueSpan = value.AsSpan();
+        var result = new StringBuilder(value);
+
+        for (var i = 0; i < valueSpan.Length; ++i)
+        {
+            if (valueSpan[i] == '{')
+            {
+                begin = i;
+            }
+            else if (valueSpan[i] == '}' && begin != -1)
+            {
+                var key = value[(begin + 1)..i];
+                var path = key.Split(['.', ':'], StringSplitOptions.RemoveEmptyEntries);
+                var element = placeholders[path[0]];
+                var elementValue = GetElementValue(element, path[1..]);
+
+                result.Replace(valueSpan[begin..(i + 1)], elementValue);
+                begin = -1;
+            }
+        }
+
+        return result.ToString();
+    }
+
+    private static string GetElementValue(JsonElement element, string[] path)
+    {
+        foreach (var part in path)
+        {
+            element = element.GetProperty(part);
+        }
+
+        if (element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            throw new InvalidOperationException("Placeholder value cannot be null or undefined.");
+        }
+
+        if (element.ValueKind == JsonValueKind.String)
+        {
+            return element.GetString() ?? string.Empty;
+        }
+
+        return element.GetRawText();
     }
 }
