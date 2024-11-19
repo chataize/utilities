@@ -33,4 +33,19 @@ public static class DictionaryExtensions
 
         return newDictionary;
     }
+
+    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IDictionary<string, JsonElement> dictionary, IReadOnlyDictionary<string, JsonElement> placeholders)
+    {
+        var newDictionary = new Dictionary<string, JsonElement>(dictionary);
+
+        foreach (var key in newDictionary.Keys)
+        {
+            if (newDictionary[key].ValueKind == JsonValueKind.String)
+            {
+                newDictionary[key] = JsonSerializer.SerializeToElement((newDictionary[key].GetString() ?? string.Empty).WithPlaceholderValues(placeholders));
+            }
+        }
+
+        return newDictionary;
+    }
 }
