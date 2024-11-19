@@ -305,10 +305,13 @@ public static class StringExtension
             {
                 var key = value[(begin + 1)..i];
                 var path = key.Split(['.', ':'], StringSplitOptions.RemoveEmptyEntries);
-                var element = placeholders[path[0]];
-                var elementValue = GetElementValue(element, path[1..]);
 
-                result.Replace(valueSpan[begin..(i + 1)], elementValue);
+                if (path.Length > 0 && placeholders.TryGetValue(path[0], out var element))
+                {
+                    var elementValue = GetElementValue(element, path[1..]);
+                    result.Replace(valueSpan[begin..(i + 1)], elementValue);
+                }
+
                 begin = -1;
             }
         }
