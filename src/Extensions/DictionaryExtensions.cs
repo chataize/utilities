@@ -35,6 +35,13 @@ public static class DictionaryExtensions
         {
             if (newDictionary[key].ValueKind == JsonValueKind.String)
             {
+                var currentText = newDictionary[key].GetString() ?? string.Empty;
+                var newText = currentText.WithPlaceholderValues(placeholders);
+
+                newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
+            }
+            else
+            {
                 var rawText = newDictionary[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
@@ -52,6 +59,13 @@ public static class DictionaryExtensions
         foreach (var key in newDictionary.Keys)
         {
             if (newDictionary[key].ValueKind == JsonValueKind.String)
+            {
+                var currentText = newDictionary[key].GetString() ?? string.Empty;
+                var newText = currentText.WithPlaceholderValues(placeholders);
+
+                newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
+            }
+            else
             {
                 var rawText = newDictionary[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
