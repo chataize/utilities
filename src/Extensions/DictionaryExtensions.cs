@@ -40,12 +40,13 @@ public static class DictionaryExtensions
 
                 newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
             }
-            else
+            else if (newDictionary[key].ValueKind is JsonValueKind.Object or JsonValueKind.Array)
             {
                 var rawText = newDictionary[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
-                newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
+                using var document = JsonDocument.Parse(newText);
+                newDictionary[key] = document.RootElement.Clone();
             }
         }
 
@@ -54,7 +55,7 @@ public static class DictionaryExtensions
 
     public static Dictionary<string, JsonElement> WithPlaceholderValues(this IDictionary<string, JsonElement> dictionary, IReadOnlyDictionary<string, JsonElement> placeholders)
     {
-        var newDictionary = new Dictionary<string, JsonElement>(dictionary);
+        var newDictionary = new Dictionary<string, JsonElement>(dictionary, StringComparer.InvariantCultureIgnoreCase);
 
         foreach (var key in newDictionary.Keys)
         {
@@ -65,12 +66,13 @@ public static class DictionaryExtensions
 
                 newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
             }
-            else
+            else if (newDictionary[key].ValueKind is JsonValueKind.Object or JsonValueKind.Array)
             {
                 var rawText = newDictionary[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
-                newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
+                using var document = JsonDocument.Parse(newText);
+                newDictionary[key] = document.RootElement.Clone();
             }
         }
 
