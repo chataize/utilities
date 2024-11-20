@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 
 namespace ChatAIze.Utilities.Extensions;
@@ -338,7 +338,7 @@ public static class StringExtension
 
         if (element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
         {
-            return "<no value>";
+            return string.Empty;
         }
 
         if (element.ValueKind == JsonValueKind.String)
