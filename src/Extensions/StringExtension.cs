@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 
 namespace ChatAIze.Utilities.Extensions;
@@ -282,8 +282,18 @@ public static class StringExtension
 
         foreach (var placeholder in placeholders)
         {
-            result.Replace($"{{{placeholder.Key}}}", placeholder.Value.ToString());
-            result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", placeholder.Value.ToString());
+            if (placeholder.Value is string stringValue)
+            {
+                result.Replace($"{{{placeholder.Key}}}", stringValue);
+                result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", stringValue);
+            }
+            else
+            {
+                var convertedValue = placeholder.Value.ToString() ?? string.Empty;
+
+                result.Replace($"{{{placeholder.Key}}}", convertedValue);
+                result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", convertedValue);
+            }
         }
 
         return result.ToString();
