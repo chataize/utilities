@@ -12,70 +12,70 @@ public static class DictionaryExtensions
         PropertyNameCaseInsensitive = true,
     };
 
-    public static Dictionary<string, object> WithPlaceholderValues(this IDictionary<string, object> dictionary, params IEnumerable<KeyValuePair<string, object>> placeholders)
+    public static Dictionary<string, object> WithPlaceholderValues(this IDictionary<string, object> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
-        var newDictionary = new Dictionary<string, object>(dictionary);
+        var newValues = new Dictionary<string, object>(values);
 
-        foreach (var key in newDictionary.Keys)
+        foreach (var key in newValues.Keys)
         {
-            if (newDictionary[key] is string stringValue)
+            if (newValues[key] is string stringValue)
             {
-                newDictionary[key] = stringValue.WithPlaceholderValues(placeholders);
+                newValues[key] = stringValue.WithPlaceholderValues(placeholders);
             }
         }
 
-        return newDictionary;
+        return newValues;
     }
 
-    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IDictionary<string, JsonElement> dictionary, params IEnumerable<KeyValuePair<string, object>> placeholders)
+    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IDictionary<string, JsonElement> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
-        var newDictionary = new Dictionary<string, JsonElement>(dictionary);
+        var newValues = new Dictionary<string, JsonElement>(values);
 
-        foreach (var key in newDictionary.Keys)
+        foreach (var key in newValues.Keys)
         {
-            if (newDictionary[key].ValueKind == JsonValueKind.String)
+            if (newValues[key].ValueKind == JsonValueKind.String)
             {
-                var currentText = newDictionary[key].GetString() ?? string.Empty;
+                var currentText = newValues[key].GetString() ?? string.Empty;
                 var newText = currentText.WithPlaceholderValues(placeholders);
 
-                newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
+                newValues[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
             }
-            else if (newDictionary[key].ValueKind is JsonValueKind.Object or JsonValueKind.Array)
+            else if (newValues[key].ValueKind is JsonValueKind.Object or JsonValueKind.Array)
             {
-                var rawText = newDictionary[key].GetRawText() ?? string.Empty;
+                var rawText = newValues[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
                 using var document = JsonDocument.Parse(newText);
-                newDictionary[key] = document.RootElement.Clone();
+                newValues[key] = document.RootElement.Clone();
             }
         }
 
-        return newDictionary;
+        return newValues;
     }
 
-    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IDictionary<string, JsonElement> dictionary, IReadOnlyDictionary<string, JsonElement> placeholders)
+    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IDictionary<string, JsonElement> values, IReadOnlyDictionary<string, JsonElement> placeholders)
     {
-        var newDictionary = new Dictionary<string, JsonElement>(dictionary, StringComparer.InvariantCultureIgnoreCase);
+        var newValues = new Dictionary<string, JsonElement>(values);
 
-        foreach (var key in newDictionary.Keys)
+        foreach (var key in newValues.Keys)
         {
-            if (newDictionary[key].ValueKind == JsonValueKind.String)
+            if (newValues[key].ValueKind == JsonValueKind.String)
             {
-                var currentText = newDictionary[key].GetString() ?? string.Empty;
+                var currentText = newValues[key].GetString() ?? string.Empty;
                 var newText = currentText.WithPlaceholderValues(placeholders);
 
-                newDictionary[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
+                newValues[key] = JsonSerializer.SerializeToElement(newText, JsonOptions);
             }
-            else if (newDictionary[key].ValueKind is JsonValueKind.Object or JsonValueKind.Array)
+            else if (newValues[key].ValueKind is JsonValueKind.Object or JsonValueKind.Array)
             {
-                var rawText = newDictionary[key].GetRawText() ?? string.Empty;
+                var rawText = newValues[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
                 using var document = JsonDocument.Parse(newText);
-                newDictionary[key] = document.RootElement.Clone();
+                newValues[key] = document.RootElement.Clone();
             }
         }
 
-        return newDictionary;
+        return newValues;
     }
 }
