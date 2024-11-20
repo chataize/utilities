@@ -6,7 +6,7 @@ namespace ChatAIze.Utilities.Extensions;
 
 public static class DelegateExtensions
 {
-    private static JsonSerializerOptions JsonOptions { get; } = new()
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
