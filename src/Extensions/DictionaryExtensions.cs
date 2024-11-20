@@ -5,11 +5,10 @@ namespace ChatAIze.Utilities.Extensions;
 
 public static class DictionaryExtensions
 {
-    private static JsonSerializerOptions JsonOptions { get; } = new()
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        PropertyNameCaseInsensitive = true,
     };
 
     public static Dictionary<string, object> WithPlaceholderValues(this IDictionary<string, object> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
