@@ -161,6 +161,7 @@ public static class DelegateExtensions
                 continue;
             }
 
+            actionContext?.SetActionResult(isSuccess: false, $"Value missing for required parameter '{parameter.Name}'.");
             return $"Value missing for required parameter '{parameter.Name}'.";
         }
 
