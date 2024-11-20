@@ -333,14 +333,7 @@ public static class StringExtension
     {
         foreach (var part in path)
         {
-            if (element.TryGetProperty(part, out var childElement))
-            {
-                element = childElement;
-            }
-            else
-            {
-                return "<invalid property>";
-            }
+            element = element.GetProperty(part);
         }
 
         if (element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
