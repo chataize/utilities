@@ -9,7 +9,7 @@ public static class DictionaryExtensions
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
-    public static T TryGetSettingValue<T>(this IDictionary<string, JsonElement> settings, string key, T defaultValue)
+    public static T TryGetSettingValue<T>(this IReadOnlyDictionary<string, JsonElement> settings, string key, T defaultValue)
     {
         try
         {
@@ -22,7 +22,7 @@ public static class DictionaryExtensions
         return defaultValue;
     }
 
-    public static Dictionary<string, object> WithPlaceholderValues(this IDictionary<string, object> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
+    public static Dictionary<string, object> WithPlaceholderValues(this IReadOnlyDictionary<string, object> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
         var newValues = new Dictionary<string, object>(values);
 
@@ -37,7 +37,7 @@ public static class DictionaryExtensions
         return newValues;
     }
 
-    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IDictionary<string, JsonElement> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
+    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IReadOnlyDictionary<string, JsonElement> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
         var newValues = new Dictionary<string, JsonElement>(values);
 
@@ -63,7 +63,7 @@ public static class DictionaryExtensions
         return newValues;
     }
 
-    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IDictionary<string, JsonElement> values, IReadOnlyDictionary<string, JsonElement> placeholders)
+    public static Dictionary<string, JsonElement> WithPlaceholderValues(this IReadOnlyDictionary<string, JsonElement> values, IReadOnlyDictionary<string, JsonElement> placeholders)
     {
         var newValues = new Dictionary<string, JsonElement>(values);
 
