@@ -13,9 +13,9 @@ public static class DictionaryExtensions
     {
         try
         {
-            if (!settings.TryGetValue(key, out var value))
+            if (settings.TryGetValue(key, out var value))
             {
-                return JsonSerializer.Deserialize<T>(value.GetRawText(), JsonOptions) ?? defaultValue;
+                return value.Deserialize<T>() ?? defaultValue;
             }
         }
         catch { }
