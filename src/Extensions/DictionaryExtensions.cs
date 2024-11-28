@@ -7,8 +7,7 @@ public static class DictionaryExtensions
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
     public static T TryGetSettingValue<T>(this IDictionary<string, JsonElement> settings, string key, T defaultValue)
