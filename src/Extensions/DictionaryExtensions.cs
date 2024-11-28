@@ -11,6 +11,19 @@ public static class DictionaryExtensions
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
+    public static T TryGetSettingValue<T>(this IDictionary<string, JsonElement> settings, string key, T defaultValue)
+    {
+        try
+        {
+            if (!settings.TryGetValue(key, out var value))
+            {
+                return JsonSerializer.Deserialize<T>(value.GetRawText(), JsonOptions) ?? defaultValue;
+            }
+        }
+        catch { }
+        return defaultValue;
+    }
+
     public static Dictionary<string, object> WithPlaceholderValues(this IDictionary<string, object> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
         var newValues = new Dictionary<string, object>(values);
