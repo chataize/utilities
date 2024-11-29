@@ -129,7 +129,7 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
-    public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, IDictionary<string, JsonElement> arguments, IActionContext? actionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, IReadOnlyDictionary<string, JsonElement> arguments, IActionContext? actionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
 
@@ -147,7 +147,18 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!, out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
+            JsonElement argument = default;
+
+            if (arguments.TryGetValue(parameter.Name!, out var argument1))
+            {
+                argument = argument1;
+            }
+            else if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument2))
+            {
+                argument = argument2;
+            }
+
+            if (!(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
             {
                 parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
                 continue;
@@ -204,7 +215,7 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
-    public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IDictionary<string, JsonElement> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
+    public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IReadOnlyDictionary<string, JsonElement> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
 
@@ -222,7 +233,18 @@ public static class DelegateExtensions
                 continue;
             }
 
-            if (arguments.TryGetValue(parameter.Name!, out var argument) && !(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
+            JsonElement argument = default;
+
+            if (arguments.TryGetValue(parameter.Name!, out var argument1))
+            {
+                argument = argument1;
+            }
+            else if (arguments.TryGetValue(parameter.Name!.ToSnakeLower(), out var argument2))
+            {
+                argument = argument2;
+            }
+
+            if (!(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
             {
                 parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
                 continue;
