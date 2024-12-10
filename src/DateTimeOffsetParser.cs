@@ -9,19 +9,19 @@ public static class DateTimeOffsetParser
             return DateTimeOffset.UtcNow.Date;
         }
 
-        var lowerValue = value.ToLowerInvariant();
+        var normalizedValue = value.Trim().ToLowerInvariant();
 
-        if (lowerValue is "now" or "today")
+        if (normalizedValue is "now" or "today")
         {
             return DateTimeOffset.UtcNow;
         }
 
-        if (lowerValue is "yesterday")
+        if (normalizedValue is "yesterday")
         {
             return DateTimeOffset.UtcNow.AddDays(-1);
         }
 
-        if (lowerValue is "tomorrow")
+        if (normalizedValue is "tomorrow")
         {
             return DateTimeOffset.UtcNow.AddDays(1);
         }
