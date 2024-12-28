@@ -158,7 +158,7 @@ public static class DelegateExtensions
                 argument = argument2;
             }
 
-            if (!(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
+            if (argument.ValueKind is not (JsonValueKind.Undefined or JsonValueKind.Null))
             {
                 parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
                 continue;
@@ -244,7 +244,7 @@ public static class DelegateExtensions
                 argument = argument2;
             }
 
-            if (!(argument.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null))
+            if (argument.ValueKind is not (JsonValueKind.Undefined or JsonValueKind.Null))
             {
                 parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
                 continue;

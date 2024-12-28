@@ -19,6 +19,7 @@ public static class DictionaryExtensions
             }
         }
         catch { }
+
         return defaultValue;
     }
 

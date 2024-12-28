@@ -21,8 +21,8 @@ public static class StringExtension
                 continue;
             }
 
-            char latinValue = value[i].ToLatin();
-            char latinOther = other[j].ToLatin();
+            var latinValue = value[i].ToLatin();
+            var latinOther = other[j].ToLatin();
 
             while (!char.IsAsciiLetterOrDigit(latinValue))
             {
@@ -59,7 +59,7 @@ public static class StringExtension
 
         while (i < value.Length)
         {
-            char latinValue = value[i++].ToLatin();
+            var latinValue = value[i++].ToLatin();
             if (char.IsAsciiLetterOrDigit(latinValue))
             {
                 return false;
@@ -68,7 +68,7 @@ public static class StringExtension
 
         while (j < other.Length)
         {
-            char latinOther = other[j++].ToLatin();
+            var latinOther = other[j++].ToLatin();
             if (char.IsAsciiLetterOrDigit(latinOther))
             {
                 return false;
@@ -115,7 +115,7 @@ public static class StringExtension
         var containsDash = false;
         var containsUnderscore = false;
 
-        for (int i = 0; i < additionalChars.Length; ++i)
+        for (var i = 0; i < additionalChars.Length; ++i)
         {
             if (additionalChars[i] == '-')
             {
@@ -137,7 +137,7 @@ public static class StringExtension
             }
         }
 
-        for (int i = 0; i < value.Length; ++i)
+        for (var i = 0; i < value.Length; ++i)
         {
             if (char.IsAsciiLetterOrDigit(value[i]) || additionalChars.Contains(value[i]))
             {
@@ -168,7 +168,7 @@ public static class StringExtension
     {
         Span<char> buffer = value.Length <= MaxStackStringLength ? stackalloc char[value.Length] : new char[value.Length];
 
-        for (int i = 0; i < value.Length; ++i)
+        for (var i = 0; i < value.Length; ++i)
         {
             buffer[i] = value[i].ToLatin();
         }
@@ -183,7 +183,7 @@ public static class StringExtension
 
     public static string ToSeparated(this ReadOnlySpan<char> value, char separator, bool upper = false)
     {
-        var maxUnderscores = value.Length / 2 + 1;
+        var maxUnderscores = (value.Length / 2) + 1;
         Span<char> buffer = value.Length + maxUnderscores <= MaxStackStringLength ? stackalloc char[value.Length + maxUnderscores] : new char[value.Length + maxUnderscores];
 
         var newLength = 0;
@@ -269,7 +269,7 @@ public static class StringExtension
 
         foreach (var placeholder in placeholders)
         {
-            result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", placeholder.Value);
+            _ = result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", placeholder.Value);
         }
 
         return result.ToString();
@@ -283,12 +283,12 @@ public static class StringExtension
         {
             if (placeholder.Value is string stringValue)
             {
-                result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", stringValue);
+                _ = result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", stringValue);
             }
             else
             {
                 var convertedValue = placeholder.Value.ToString() ?? string.Empty;
-                result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", convertedValue);
+                _ = result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", convertedValue);
             }
         }
 
@@ -315,7 +315,7 @@ public static class StringExtension
                 if (path.Length > 0 && placeholders.TryGetValue(path[0], out var element))
                 {
                     var elementValue = GetElementValue(element, path[1..]);
-                    result.Replace(valueSpan[begin..(i + 1)], elementValue);
+                    _ = result.Replace(valueSpan[begin..(i + 1)], elementValue);
                 }
 
                 begin = -1;
