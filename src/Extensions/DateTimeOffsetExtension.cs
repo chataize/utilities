@@ -7,7 +7,7 @@ public static partial class DateTimeOffsetExtension
 {
     public static DateTimeOffset FromNaturalString(string s)
     {
-        s = s.Trim().ToLowerInvariant();
+        s = TranslateTime(s);
 
         if (DateTimeOffset.TryParse(s, out var result))
         {
@@ -523,9 +523,53 @@ public static partial class DateTimeOffsetExtension
 
         var map = new Dictionary<string, string>
         {
+            ["styczen"] = "january",
+            ["luty"] = "february",
+            ["marzec"] = "march",
+            ["kwiecien"] = "april",
+            ["maj"] = "may",
+            ["czerwiec"] = "june",
+            ["lipiec"] = "july",
+            ["sierpien"] = "august",
+            ["wrzesien"] = "september",
+            ["pazdziernik"] = "october",
+            ["listopad"] = "november",
+            ["grudzien"] = "december",
             ["poniedzialek"] = "monday",
             ["wtorek"] = "tuesday",
-
+            ["sroda"] = "wednesday",
+            ["srode"] = "wednesday",
+            ["czwartek"] = "thursday",
+            ["piatek"] = "friday",
+            ["sobota"] = "saturday",
+            ["sobote"] = "saturday",
+            ["niedziela"] = "sunday",
+            ["niedziele"] = "sunday",
+            ["wczoraj"] = "yesterday",
+            ["dzisiaj"] = "today",
+            ["dzis"] = "today",
+            ["jutro"] = "tomorrow",
+            ["rano"] = "morning",
+            ["poludnie"] = "noon",
+            ["popoludnie"] = "afternoon",
+            ["wieczor"] = "evening",
+            ["noc"] = "night",
+            ["polnoc"] = "midnight",
+            ["kolo"] = "at",
+            ["okolo"] = "at",
+            ["w okolicy"] = "at",
+            [" przed "] = " at ",
+            [" o "] = " at ",
+            [" po "] = " at",
+            ["teraz"] = "now",
+            ["ostatni"] = "last",
+            ["ostatna"] = "last",
+            ["poprzedni"] = "last",
+            ["poprzedna"] = "last",
+            ["nastepny"] = "next",
+            ["nastepna"] = "next",
+            ["przyszly"] = "next",
+            ["przyszla"] = "next"
         };
 
         var builder = new StringBuilder(s);
