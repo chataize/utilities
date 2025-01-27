@@ -5,7 +5,7 @@ namespace ChatAIze.Utilities.Extensions;
 
 public static partial class DateTimeOffsetExtension
 {
-    public static DateTimeOffset FromNaturalString(string s)
+    public static DateTimeOffset FromNaturalString(this string s)
     {
         s = s.Trim().ToLowerInvariant();
         s = TranslateTime(s);
