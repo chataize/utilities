@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace ChatAIze.Utilities.Extensions;
@@ -7,6 +8,7 @@ public static partial class DateTimeOffsetExtension
     public static DateTimeOffset FromNaturalString(string s)
     {
         s = s.Trim().ToLowerInvariant();
+        s = TranslateTime(s);
 
         if (DateTimeOffset.TryParse(s, out var result))
         {
@@ -501,6 +503,62 @@ public static partial class DateTimeOffsetExtension
         }
 
         return targetTime.ToString("yyyy-MM-dd");
+    }
+
+    private static string TranslateTime(string s)
+    {
+        s = s.Trim().ToLowerInvariant().ToLatin();
+
+        var map = new Dictionary<string, string>
+        {
+            ["styczen"] = "january",
+            ["luty"] = "february",
+            ["marzec"] = "march",
+            ["kwiecien"] = "april",
+            ["maj"] = "may",
+            ["czerwiec"] = "june",
+            ["lipiec"] = "july",
+            ["sierpien"] = "august",
+            ["wrzesien"] = "september",
+            ["pazdziernik"] = "october",
+            ["listopad"] = "november",
+            ["grudzien"] = "december",
+            ["poniedzialek"] = "monday",
+            ["wtorek"] = "tuesday",
+            ["sroda"] = "wednesday",
+            ["czwartek"] = "thursday",
+            ["piatek"] = "friday",
+            ["sobota"] = "saturday",
+            ["niedziela"] = "sunday",
+            ["wczoraj"] = "yesterday",
+            ["dzis"] = "today",
+            ["jutro"] = "tomorrow",
+            ["rano"] = "morning",
+            ["poludnie"] = "noon",
+            ["popoludnie"] = "afternoon",
+            ["wieczor"] = "evening",
+            ["noc"] = "night",
+            ["polnoc"] = "midnight",
+            ["kolo"] = "at",
+            ["okolo"] = "at",
+            ["w okolicy"] = "at",
+            [" przed "] = " at ",
+            [" o "] = " at ",
+            [" po "] = " at",
+            ["teraz"] = "now",
+            ["ostatni"] = "last",
+            ["poprzedni"] = "last",
+            ["nastepny"] = "next",
+            ["przyszly"] = "next"
+        };
+
+        var builder = new StringBuilder(s);
+        foreach (var value in map)
+        {
+            builder.Replace(value.Key, value.Value);
+        }
+
+        return builder.ToString();
     }
 
     [GeneratedRegex(@"\b\d{1,2}/\d{1,2}/\d{4}\b")]
