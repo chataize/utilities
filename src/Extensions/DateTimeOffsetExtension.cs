@@ -547,9 +547,13 @@ public static partial class DateTimeOffsetExtension
             [" po "] = " at",
             ["teraz"] = "now",
             ["ostatni"] = "last",
+            ["ostatna"] = "last",
             ["poprzedni"] = "last",
+            ["poprzedna"] = "last",
             ["nastepny"] = "next",
-            ["przyszly"] = "next"
+            ["nastepna"] = "next",
+            ["przyszly"] = "next",
+            ["przyszla"] = "next"
         };
 
         var builder = new StringBuilder(s);
