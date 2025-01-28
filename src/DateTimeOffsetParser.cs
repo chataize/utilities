@@ -481,16 +481,17 @@ public static partial class DateTimeOffsetParser
             ["jutro"] = "tomorrow",
             ["rano"] = "morning",
             ["poludnie"] = "noon",
-            ["popoludnie"] = "afternoon",
+            ["poludnia"] = "noon",
+            ["poludniu"] = "noon",
             ["wieczor"] = "evening",
             ["noc"] = "night",
             ["polnoc"] = "midnight",
             ["kolo"] = "at",
             ["okolo"] = "at",
             ["w okolicy"] = "at",
-            [" przed "] = " at ",
-            [" o "] = " at ",
-            [" po "] = " at",
+            ["przed"] = " at ",
+            ["o"] = " at ",
+            ["po"] = " at",
             ["teraz"] = "now",
             ["ostatni"] = "last",
             ["ostatna"] = "last",
@@ -502,13 +503,10 @@ public static partial class DateTimeOffsetParser
             ["przyszla"] = "next"
         };
 
-        var builder = new StringBuilder(s);
-        foreach (var value in map)
-        {
-            builder.Replace(value.Key, value.Value);
-        }
+        var pattern = @"\b(" + string.Join("|", map.Keys.Select(Regex.Escape)) + @")\b";
+        s = Regex.Replace(s, pattern, match => map[match.Value], RegexOptions.IgnoreCase);
 
-        return builder.ToString();
+        return s;
     }
 
     [GeneratedRegex(@"\b\d{1,2}/\d{1,2}/\d{4}\b")]
