@@ -24,8 +24,8 @@ public static partial class DateTimeOffsetParser
         var month = DateTime.UtcNow.Month;
         var day = DateTime.UtcNow.Day;
         var hour = DateTime.UtcNow.Hour;
-        var minute = DateTime.UtcNow.Minute;
-        var second = DateTime.UtcNow.Second;
+        var minute = 0;
+        var second = 0;
         var offset = TimeSpan.Zero;
 
         var yearMatch = YearRegex().Match(s);
