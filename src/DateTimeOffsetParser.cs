@@ -317,94 +317,49 @@ public static partial class DateTimeOffsetParser
             }
         }
 
-        if (s.Contains("am") && hour == 12)
+        if (s.Contains(" am") && hour == 12)
         {
             hour = 0;
         }
 
-        if (s.Contains("pm") && hour < 12)
+        if (s.Contains(" pm") && hour < 12)
         {
             hour += 12;
         }
 
-        if (s.Contains("utc") || s.Contains("gmt"))
+        if (s.Contains(" utc") || s.Contains(" gmt"))
         {
             offset = TimeSpan.Zero;
         }
 
-        if (s.Contains("pst"))
+        if (s.Contains(" pst"))
         {
             offset = TimeSpan.FromHours(-8);
         }
 
-        if (s.Contains("pdt"))
+        if (s.Contains(" mst"))
         {
             offset = TimeSpan.FromHours(-7);
         }
 
-        if (s.Contains("mst"))
-        {
-            offset = TimeSpan.FromHours(-7);
-        }
-
-        if (s.Contains("mdt"))
+        if (s.Contains(" cst"))
         {
             offset = TimeSpan.FromHours(-6);
         }
 
-        if (s.Contains("cst"))
-        {
-            offset = TimeSpan.FromHours(-6);
-        }
-
-        if (s.Contains("cdt"))
+        if (s.Contains(" est"))
         {
             offset = TimeSpan.FromHours(-5);
         }
 
-        if (s.Contains("est"))
-        {
-            offset = TimeSpan.FromHours(-5);
-        }
-
-        if (s.Contains("edt"))
-        {
-            offset = TimeSpan.FromHours(-4);
-        }
-
-        if (s.Contains("bst"))
+        if (s.Contains(" bst"))
         {
             offset = TimeSpan.FromHours(1);
         }
 
-        if (s.Contains("cest"))
+        if (s.Contains(" cest"))
         {
             offset = TimeSpan.FromHours(2);
-        }
-
-        if (s.Contains("aest"))
-        {
-            offset = TimeSpan.FromHours(10);
-        }
-
-        if (s.Contains("aedt"))
-        {
-            offset = TimeSpan.FromHours(11);
-        }
-
-        if (s.Contains("acst"))
-        {
-            offset = TimeSpan.FromHours(9);
-        }
-
-        if (s.Contains("acdt"))
-        {
-            offset = TimeSpan.FromHours(10);
-        }
-
-        if (s.Contains("awst"))
-        {
-            offset = TimeSpan.FromHours(8);
         }
 
         var gmtMatch = GmtRegex().Match(s);
