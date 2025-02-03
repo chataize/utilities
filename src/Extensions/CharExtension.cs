@@ -6,7 +6,7 @@ public static class CharExtension
 {
     private static readonly FrozenDictionary<char, char> transliterationMap = new Dictionary<char, char>
     {
-        { 'I', 'İ' },
+        { 'İ', 'I' },
         { 'À', 'A' },
         { 'Á', 'A' },
         { 'Â', 'A' },
