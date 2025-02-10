@@ -288,16 +288,6 @@ public static class StringExtension
             else
             {
                 var placeholderValue = placeholder.Value?.ToString() ?? string.Empty;
-
-                if (DateTimeOffset.TryParse(placeholderValue, out var dateTimeOffset))
-                {
-                    placeholderValue = dateTimeOffset.ToString("dd.MM.yyyy HH:mm:ss");
-                }
-                else if (DateTime.TryParse(placeholderValue, out var dateTime))
-                {
-                    placeholderValue = dateTime.ToString("dd.MM.yyyy HH:mm:ss");
-                }
-
                 _ = result.Replace($"{{{placeholder.Key.ToSnakeLower()}}}", placeholderValue);
             }
         }
@@ -347,22 +337,11 @@ public static class StringExtension
             return string.Empty;
         }
 
-        if (element.ValueKind == JsonValueKind.String)
+        if (element.ValueKind is JsonValueKind.String)
         {
             return element.GetString() ?? string.Empty;
         }
 
-        var rawText = element.GetRawText() ?? string.Empty;
-
-        if (DateTimeOffset.TryParse(rawText, out var dateTimeOffset))
-        {
-            return dateTimeOffset.ToString("dd.MM.yyyy HH:mm:ss");
-        }
-        else if (DateTime.TryParse(rawText, out var dateTime))
-        {
-            return dateTime.ToString("dd.MM.yyyy HH:mm:ss");
-        }
-
-        return rawText;
+        return element.GetRawText();
     }
 }
