@@ -329,7 +329,10 @@ public static class StringExtension
     {
         foreach (var part in path)
         {
-            element = element.GetProperty(part);
+            if (!element.TryGetProperty(part.ToSnakeLower(), out element))
+            {
+                return string.Empty;
+            }
         }
 
         if (element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
