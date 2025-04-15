@@ -315,7 +315,10 @@ public static class StringExtension
                 if (path.Length > 0 && placeholders.TryGetValue(path[0], out var element))
                 {
                     var elementValue = GetElementValue(element, path[1..]);
-                    _ = result.Replace(valueSpan[begin..(i + 1)], elementValue);
+                    if (elementValue is not null)
+                    {
+                        result.Replace(valueSpan[begin..(i + 1)], elementValue);
+                    }
                 }
 
                 begin = -1;
@@ -325,13 +328,13 @@ public static class StringExtension
         return result.ToString();
     }
 
-    private static string GetElementValue(JsonElement element, string[] path)
+    private static string? GetElementValue(JsonElement element, string[] path)
     {
         foreach (var part in path)
         {
             if (!element.TryGetProperty(part.ToSnakeLower(), out element))
             {
-                return string.Empty;
+                return null;
             }
         }
 
