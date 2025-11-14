@@ -1,4 +1,4 @@
 ﻿<Solution>
-  <Project Path="src/ChatAIze.Utilities.csproj" />
+  <Project Path="ChatAIze.Utilities/ChatAIze.Utilities.csproj" />
   <Project Path="preview/ChatAIze.Utilities.Preview.csproj" />
 </Solution>
