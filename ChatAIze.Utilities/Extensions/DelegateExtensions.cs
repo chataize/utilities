@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using System.Text.Json;
 using ChatAIze.Abstractions.Chat;
 
@@ -54,6 +57,26 @@ public static class DelegateExtensions
                 var rawValue = argument.GetRawText();
                 var stringValue = argument.ValueKind == JsonValueKind.String ? argument.GetString() : rawValue;
 
+                if (parameter.ParameterType == typeof(string))
+                {
+                    if (parameter.GetCustomAttribute<RequiredAttribute>() is not null && string.IsNullOrWhiteSpace(stringValue))
+                    {
+                        return $"Error: Value missing for required parameter '{parameter.Name}'.";
+                    }
+
+                    var (minLen, maxLen) = GetStringLengthConstraints(parameter);
+                    var length = stringValue?.Length ?? 0;
+                    if (minLen.HasValue && length < minLen.Value)
+                    {
+                        return $"Error: Value for parameter '{parameter.Name}' must be at least {minLen.Value} characters long.";
+                    }
+
+                    if (maxLen.HasValue && length > maxLen.Value)
+                    {
+                        return $"Error: Value for parameter '{parameter.Name}' must be at most {maxLen.Value} characters long.";
+                    }
+                }
+
                 try
                 {
                     if (parameter.ParameterType.IsEnum)
@@ -67,7 +90,7 @@ public static class DelegateExtensions
                     }
                     else
                     {
-                        var parsedValue = JsonSerializer.Deserialize(rawValue, parameter.ParameterType);
+                        var parsedValue = JsonSerializer.Deserialize(rawValue, parameter.ParameterType, JsonOptions);
                         parsedArguments.Add(parsedValue);
                     }
                 }
@@ -82,6 +105,13 @@ public static class DelegateExtensions
             if (parameter.IsOptional)
             {
                 parsedArguments.Add(parameter.DefaultValue);
+                continue;
+            }
+
+            var defaultAttribute = parameter.GetCustomAttribute<DefaultValueAttribute>();
+            if (defaultAttribute is not null)
+            {
+                parsedArguments.Add(defaultAttribute.Value);
                 continue;
             }
 
@@ -160,13 +190,48 @@ public static class DelegateExtensions
 
             if (argument.ValueKind is not (JsonValueKind.Undefined or JsonValueKind.Null))
             {
-                parsedArguments.Add(argument.Deserialize(parameter.ParameterType));
+                if (parameter.ParameterType == typeof(string))
+                {
+                    var value = argument.GetString();
+                    if (parameter.GetCustomAttribute<RequiredAttribute>() is not null && string.IsNullOrWhiteSpace(value))
+                    {
+                        actionContext?.SetActionResult(isSuccess: false, $"Value missing for required parameter '{parameter.Name}'.");
+                        return $"Value missing for required parameter '{parameter.Name}'.";
+                    }
+
+                    var (minLen, maxLen) = GetStringLengthConstraints(parameter);
+                    var length = value?.Length ?? 0;
+                    if (minLen.HasValue && length < minLen.Value)
+                    {
+                        actionContext?.SetActionResult(isSuccess: false, $"Value for parameter '{parameter.Name}' must be at least {minLen.Value} characters long.");
+                        return $"Value for parameter '{parameter.Name}' must be at least {minLen.Value} characters long.";
+                    }
+
+                    if (maxLen.HasValue && length > maxLen.Value)
+                    {
+                        actionContext?.SetActionResult(isSuccess: false, $"Value for parameter '{parameter.Name}' must be at most {maxLen.Value} characters long.");
+                        return $"Value for parameter '{parameter.Name}' must be at most {maxLen.Value} characters long.";
+                    }
+
+                    parsedArguments.Add(value);
+                }
+                else
+                {
+                    parsedArguments.Add(argument.Deserialize(parameter.ParameterType, JsonOptions));
+                }
                 continue;
             }
 
             if (parameter.IsOptional)
             {
                 parsedArguments.Add(parameter.DefaultValue);
+                continue;
+            }
+
+            var defaultAttribute = parameter.GetCustomAttribute<DefaultValueAttribute>();
+            if (defaultAttribute is not null)
+            {
+                parsedArguments.Add(defaultAttribute.Value);
                 continue;
             }
 
@@ -303,5 +368,33 @@ public static class DelegateExtensions
         }
 
         return (false, JsonSerializer.Serialize(invocationResult, JsonOptions));
+    }
+
+    private static (int? minLength, int? maxLength) GetStringLengthConstraints(ParameterInfo parameter)
+    {
+        int? minLength = null;
+        int? maxLength = null;
+
+        if (parameter.GetCustomAttribute<MinLengthAttribute>() is { } minLengthAttribute)
+        {
+            minLength = minLengthAttribute.Length;
+        }
+
+        if (parameter.GetCustomAttribute<StringLengthAttribute>() is { } stringLengthAttribute)
+        {
+            if (stringLengthAttribute.MinimumLength > 0)
+            {
+                minLength = minLength.HasValue ? Math.Max(minLength.Value, stringLengthAttribute.MinimumLength) : stringLengthAttribute.MinimumLength;
+            }
+
+            maxLength = maxLength.HasValue ? Math.Min(maxLength.Value, stringLengthAttribute.MaximumLength) : stringLengthAttribute.MaximumLength;
+        }
+
+        if (parameter.GetCustomAttribute<MaxLengthAttribute>() is { } maxLengthAttribute)
+        {
+            maxLength = maxLength.HasValue ? Math.Min(maxLength.Value, maxLengthAttribute.Length) : maxLengthAttribute.Length;
+        }
+
+        return (minLength, maxLength);
     }
 }
