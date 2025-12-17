@@ -2,6 +2,13 @@ using System.Text.Json;
 
 namespace ChatAIze.Utilities.Extensions;
 
+/// <summary>
+/// Helper extensions for working with settings/value dictionaries used throughout ChatAIze.
+/// </summary>
+/// <remarks>
+/// These helpers are commonly used in ChatAIze.Chatbot when composing action settings, condition settings, and placeholder-aware
+/// templates.
+/// </remarks>
 public static class DictionaryExtensions
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -9,6 +16,18 @@ public static class DictionaryExtensions
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
+    /// <summary>
+    /// Attempts to read a setting value from a JSON dictionary and deserialize it to <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">Expected value type.</typeparam>
+    /// <param name="settings">Dictionary containing JSON values.</param>
+    /// <param name="key">Key to look up.</param>
+    /// <param name="defaultValue">Fallback value returned when the key is missing or cannot be deserialized.</param>
+    /// <returns>The deserialized value or <paramref name="defaultValue"/>.</returns>
+    /// <remarks>
+    /// This method swallows deserialization errors and returns <paramref name="defaultValue"/>. Use it for tolerant reads from
+    /// user-configured settings.
+    /// </remarks>
     public static T TryGetSettingValue<T>(this IReadOnlyDictionary<string, JsonElement> settings, string key, T defaultValue)
     {
         try
@@ -23,6 +42,15 @@ public static class DictionaryExtensions
         return defaultValue;
     }
 
+    /// <summary>
+    /// Returns a copy of <paramref name="values"/> with placeholders expanded in any string values.
+    /// </summary>
+    /// <param name="values">Input dictionary.</param>
+    /// <param name="placeholders">Placeholder values consumed by <c>StringExtension.WithPlaceholderValues</c>.</param>
+    /// <returns>A new dictionary instance with substituted values.</returns>
+    /// <remarks>
+    /// Only string values are processed; non-string values are copied unchanged.
+    /// </remarks>
     public static Dictionary<string, object> WithPlaceholderValues(this IReadOnlyDictionary<string, object> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
         var newValues = new Dictionary<string, object>(values);
@@ -38,6 +66,19 @@ public static class DictionaryExtensions
         return newValues;
     }
 
+    /// <summary>
+    /// Returns a copy of <paramref name="values"/> with placeholders expanded inside string/object/array JSON values.
+    /// </summary>
+    /// <param name="values">Input dictionary.</param>
+    /// <param name="placeholders">Placeholder values consumed by <c>StringExtension.WithPlaceholderValues</c>.</param>
+    /// <returns>A new dictionary instance with substituted values.</returns>
+    /// <remarks>
+    /// For JSON strings, placeholder substitution is performed directly in the string value.
+    /// For JSON objects/arrays, substitution is performed on the raw JSON text and then reparsed.
+    /// <para>
+    /// Important: because substitution is plain text, your placeholders must produce valid JSON after replacement (no escaping is performed).
+    /// </para>
+    /// </remarks>
     public static Dictionary<string, JsonElement> WithPlaceholderValues(this IReadOnlyDictionary<string, JsonElement> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
         var newValues = new Dictionary<string, JsonElement>(values);
@@ -64,6 +105,17 @@ public static class DictionaryExtensions
         return newValues;
     }
 
+    /// <summary>
+    /// Returns a copy of <paramref name="values"/> with placeholders expanded using JSON values as the placeholder source.
+    /// </summary>
+    /// <param name="values">Input dictionary.</param>
+    /// <param name="placeholders">Placeholder values used by <see cref="StringExtension.WithPlaceholderValues(string, IReadOnlyDictionary{string, JsonElement})"/>.</param>
+    /// <returns>A new dictionary instance with substituted values.</returns>
+    /// <remarks>
+    /// For JSON strings, placeholder substitution is performed directly in the string value.
+    /// For JSON objects/arrays, substitution is performed on the raw JSON text and then reparsed.
+    /// Your placeholders must produce valid JSON after replacement.
+    /// </remarks>
     public static Dictionary<string, JsonElement> WithPlaceholderValues(this IReadOnlyDictionary<string, JsonElement> values, IReadOnlyDictionary<string, JsonElement> placeholders)
     {
         var newValues = new Dictionary<string, JsonElement>(values);

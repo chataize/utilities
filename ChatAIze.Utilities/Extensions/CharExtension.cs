@@ -2,6 +2,16 @@ using System.Collections.Frozen;
 
 namespace ChatAIze.Utilities.Extensions;
 
+/// <summary>
+/// Character-level normalization helpers used by ChatAIze string utilities.
+/// </summary>
+/// <remarks>
+/// These helpers are intentionally simple and focus on making comparisons and identifiers more tolerant by mapping common
+/// Latin characters with diacritics to ASCII-friendly equivalents.
+/// <para>
+/// This is not a full transliteration system. Only a curated set of characters is mapped.
+/// </para>
+/// </remarks>
 public static class CharExtension
 {
     private static readonly FrozenDictionary<char, char> transliterationMap = new Dictionary<char, char>
@@ -139,6 +149,15 @@ public static class CharExtension
         { 'ț', 't' }
     }.ToFrozenDictionary();
 
+    /// <summary>
+    /// Converts <paramref name="value"/> to an ASCII-friendly Latin equivalent when a mapping is known.
+    /// </summary>
+    /// <param name="value">Input character.</param>
+    /// <returns>The mapped character when known; otherwise the original character.</returns>
+    /// <remarks>
+    /// This method is used by <see cref="StringExtension.ToLatin(ReadOnlySpan{char})"/> and related normalization helpers.
+    /// Some mappings are lossy (for example, <c>'ß'</c> maps to <c>'s'</c>).
+    /// </remarks>
     public static char ToLatin(this char value)
     {
         return transliterationMap.TryGetValue(value, out var replacement) ? replacement : value;

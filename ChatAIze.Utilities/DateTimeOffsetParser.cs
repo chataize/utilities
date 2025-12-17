@@ -4,8 +4,34 @@ using ChatAIze.Utilities.Extensions;
 
 namespace ChatAIze.Utilities;
 
+/// <summary>
+/// Parses a limited set of human-friendly date/time expressions into <see cref="DateTimeOffset"/> values.
+/// </summary>
+/// <remarks>
+/// This parser is intentionally lightweight and is primarily used by ChatAIze.Chatbot workflows/conditions to interpret values like:
+/// <c>"now"</c>, <c>"today"</c>, <c>"tomorrow"</c>, <c>"next monday at 14:30"</c>, <c>"2025-01-31"</c>, <c>"31.01.2025"</c>,
+/// <c>"12/31/2025"</c>, <c>"utc+2"</c>, <c>"cest"</c>.
+/// <para>
+/// Implementation notes:
+/// <list type="bullet">
+/// <item><description>Relative keywords (<c>today</c>, <c>yesterday</c>, <c>next</c>, etc.) are evaluated against <see cref="DateTimeOffset.UtcNow"/>.</description></item>
+/// <item><description>Inputs are normalized to lowercase and transliterated via <c>ToLatin()</c>, and a small Polish-to-English word map is applied.</description></item>
+/// <item><description>Only a small set of time zone abbreviations is recognized and daylight saving time is not modeled.</description></item>
+/// </list>
+/// </para>
+/// <para>
+/// This is not a general natural-language date/time parser. Treat untrusted input carefully and be prepared to catch exceptions.
+/// </para>
+/// </remarks>
 public static partial class DateTimeOffsetParser
 {
+    /// <summary>
+    /// Parses a date/time expression into a <see cref="DateTimeOffset"/>.
+    /// </summary>
+    /// <param name="s">Input string to parse.</param>
+    /// <returns>The parsed date/time.</returns>
+    /// <exception cref="FormatException">Thrown when the input contains numeric segments that cannot be parsed.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the computed date/time is outside valid calendar ranges.</exception>
     public static DateTimeOffset Parse(string s)
     {
         s = TranslateTime(s);

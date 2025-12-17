@@ -6,6 +6,22 @@ using ChatAIze.Abstractions.Chat;
 
 namespace ChatAIze.Utilities.Extensions;
 
+/// <summary>
+/// Delegate helpers for ChatAIze function calling and workflow execution.
+/// </summary>
+/// <remarks>
+/// These helpers are used throughout the ChatAIze stack to:
+/// <list type="bullet">
+/// <item><description>derive stable names from delegates (used by plugin/function registration),</description></item>
+/// <item><description>invoke delegates using JSON arguments produced by LLM tool calls,</description></item>
+/// <item><description>invoke workflow actions/conditions using settings dictionaries.</description></item>
+/// </list>
+/// <para>
+/// The default argument binding rules are aligned with ChatAIze's conventions:
+/// parameter names are matched using snake_case (<see cref="StringExtension.ToSnakeLower(string)"/>) and return values are serialized
+/// using <see cref="JsonNamingPolicy.SnakeCaseLower"/> for model-friendly output.
+/// </para>
+/// </remarks>
 public static class DelegateExtensions
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -13,6 +29,19 @@ public static class DelegateExtensions
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
+    /// <summary>
+    /// Returns a stable, human-friendly method name for <paramref name="callback"/>.
+    /// </summary>
+    /// <param name="callback">Delegate whose method name should be normalized.</param>
+    /// <returns>The method name or a normalized name extracted from compiler-generated patterns.</returns>
+    /// <remarks>
+    /// Some compiler-generated method names (for lambdas/local functions) are not suitable as public identifiers.
+    /// This helper attempts to extract a more meaningful name from those patterns.
+    /// <para>
+    /// If the method name format is not recognized, this method throws.
+    /// </para>
+    /// </remarks>
+    /// <exception cref="Exception">Thrown when a compiler-generated method name cannot be normalized.</exception>
     public static string GetNormalizedMethodName(this Delegate callback)
     {
         var name = callback.Method.Name;
@@ -33,6 +62,36 @@ public static class DelegateExtensions
         return name[(start + 2)..end];
     }
 
+    /// <summary>
+    /// Invokes a function/tool delegate using a JSON argument payload and returns a string result suitable for LLM tool output.
+    /// </summary>
+    /// <param name="callback">Delegate to invoke.</param>
+    /// <param name="arguments">JSON object string containing arguments (keys are expected to be snake_case).</param>
+    /// <param name="functionContext">Optional function context injected when the delegate accepts an <see cref="IFunctionContext"/> parameter.</param>
+    /// <param name="cancellationToken">Cancellation token injected when the delegate accepts a <see cref="CancellationToken"/> parameter.</param>
+    /// <returns>
+    /// A string result. If the delegate returns a non-string object, the value is serialized to JSON using snake_case property naming.
+    /// </returns>
+    /// <remarks>
+    /// Parameter binding rules:
+    /// <list type="bullet">
+    /// <item><description><see cref="IFunctionContext"/> parameters are bound to <paramref name="functionContext"/>.</description></item>
+    /// <item><description><see cref="CancellationToken"/> parameters are bound to <paramref name="cancellationToken"/>.</description></item>
+    /// <item><description>Other parameters are read from <paramref name="arguments"/> using <c>parameterName.ToSnakeLower()</c>.</description></item>
+    /// </list>
+    /// <para>
+    /// Validation rules:
+    /// <list type="bullet">
+    /// <item><description><see cref="RequiredAttribute"/> on string parameters enforces non-empty input.</description></item>
+    /// <item><description><see cref="MinLengthAttribute"/>, <see cref="MaxLengthAttribute"/>, and <see cref="StringLengthAttribute"/> are enforced on string parameters.</description></item>
+    /// <item><description>Enum parameters are parsed case-insensitively and tolerate underscores.</description></item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// This method returns <c>"Error: ..."</c> strings for validation failures. Exceptions thrown by <paramref name="callback"/>
+    /// itself are not caught and will propagate to the caller.
+    /// </para>
+    /// </remarks>
     public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, string arguments, IFunctionContext? functionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
@@ -159,6 +218,29 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
+    /// <summary>
+    /// Invokes a workflow action delegate using a settings dictionary and returns a string result.
+    /// </summary>
+    /// <param name="callback">Delegate to invoke.</param>
+    /// <param name="arguments">Dictionary containing JSON values for action settings.</param>
+    /// <param name="actionContext">Optional action context injected when the delegate accepts an <see cref="IActionContext"/> parameter.</param>
+    /// <param name="cancellationToken">Cancellation token injected when the delegate accepts a <see cref="CancellationToken"/> parameter.</param>
+    /// <returns>
+    /// A string result. If the delegate returns a non-string object, the value is serialized to JSON using snake_case property naming.
+    /// </returns>
+    /// <remarks>
+    /// Parameter binding rules:
+    /// <list type="bullet">
+    /// <item><description><see cref="IActionContext"/> parameters are bound to <paramref name="actionContext"/>.</description></item>
+    /// <item><description><see cref="CancellationToken"/> parameters are bound to <paramref name="cancellationToken"/>.</description></item>
+    /// <item><description>Other parameters are read from <paramref name="arguments"/> by exact name or snake_case name.</description></item>
+    /// </list>
+    /// <para>
+    /// When a required value is missing or invalid, this method marks the action as failed via
+    /// <see cref="IActionContext.SetActionResult"/> (when <paramref name="actionContext"/> is provided) and returns a human-readable
+    /// error message.
+    /// </para>
+    /// </remarks>
     public static async ValueTask<string> InvokeForStringResultAsync(this Delegate callback, IReadOnlyDictionary<string, JsonElement> arguments, IActionContext? actionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
@@ -280,6 +362,28 @@ public static class DelegateExtensions
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
+    /// <summary>
+    /// Invokes a workflow condition delegate and returns whether execution is allowed plus an optional denial reason.
+    /// </summary>
+    /// <param name="callback">Delegate to invoke.</param>
+    /// <param name="arguments">Dictionary containing JSON values for condition settings.</param>
+    /// <param name="conditionContext">Optional condition context injected when the delegate accepts an <see cref="IConditionContext"/> parameter.</param>
+    /// <param name="cancellationToken">Cancellation token injected when the delegate accepts a <see cref="CancellationToken"/> parameter.</param>
+    /// <returns>
+    /// A tuple where the first element indicates whether the condition passed, and the second is an optional failure reason.
+    /// </returns>
+    /// <remarks>
+    /// Return conventions:
+    /// <list type="bullet">
+    /// <item><description>Return <see langword="true"/> to allow execution.</description></item>
+    /// <item><description>Return <see langword="false"/> to deny execution without a reason.</description></item>
+    /// <item><description>Return a string (or any other value) to deny execution with a reason (non-string values are JSON-serialized).</description></item>
+    /// </list>
+    /// <para>
+    /// Missing required arguments cause this method to throw. Callers typically catch and convert this to a generic
+    /// "invalid/malformed settings" error.
+    /// </para>
+    /// </remarks>
     public static async ValueTask<(bool, string?)> InvokeForConditionResultAsync(this Delegate callback, IReadOnlyDictionary<string, JsonElement> arguments, IConditionContext? conditionContext = null, CancellationToken cancellationToken = default)
     {
         var parsedArguments = new List<object?>();
