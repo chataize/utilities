@@ -44,8 +44,11 @@ public static class StringExtension
     {
         int i = 0, j = 0;
 
+        // Two-pointer scan: compare only ASCII letters/digits (after ToLatin()) and ignore everything else.
+        // This keeps indices stable and avoids allocating normalized copies.
         while (i < value.Length && j < other.Length)
         {
+            // Fast path: exact match avoids transliteration and casing work.
             if (value[i] == other[j])
             {
                 ++i;
@@ -57,6 +60,7 @@ public static class StringExtension
             var latinValue = value[i].ToLatin();
             var latinOther = other[j].ToLatin();
 
+            // Skip punctuation/whitespace/non-Latin characters (after transliteration) on each side.
             while (!char.IsAsciiLetterOrDigit(latinValue))
             {
                 if (++i < value.Length)
@@ -90,6 +94,7 @@ public static class StringExtension
             ++j;
         }
 
+        // One side ended: the remaining characters must be ignorable (non-alphanumeric) for the values to match.
         while (i < value.Length)
         {
             var latinValue = value[i++].ToLatin();
@@ -194,6 +199,8 @@ public static class StringExtension
             }
         }
 
+        // If a character isn't allowed but is a common separator ('-', '_' or whitespace), normalize it to the preferred separator:
+        // '-' when allowed (wins if both are allowed), otherwise '_' when allowed.
         for (var i = 0; i < value.Length; ++i)
         {
             if (char.IsAsciiLetterOrDigit(value[i]) || additionalChars.Contains(value[i]))
@@ -274,10 +281,12 @@ public static class StringExtension
     /// </remarks>
     public static string ToSeparated(this ReadOnlySpan<char> value, char separator, bool upper = false)
     {
+        // Worst-case we might insert ~1 separator for every 2 characters (camelCase transitions + explicit separators).
         var maxUnderscores = (value.Length / 2) + 1;
         Span<char> buffer = value.Length + maxUnderscores <= MaxStackStringLength ? stackalloc char[value.Length + maxUnderscores] : new char[value.Length + maxUnderscores];
 
         var newLength = 0;
+        // Tracks the last emitted "real" character so we can drop trailing separators (e.g. input ends with whitespace).
         var actualLength = 0;
 
         var wasPreviousUpper = false;
@@ -287,6 +296,7 @@ public static class StringExtension
         {
             if (value[i] == '_' || value[i] == '-' || value[i] == '.' || char.IsWhiteSpace(value[i]))
             {
+                // Collapse runs of separators into a single one and never start with a separator.
                 if (newLength > 0 && !wasPreviousUnderscore)
                 {
                     buffer[newLength++] = separator;
@@ -305,6 +315,7 @@ public static class StringExtension
 
             if (char.IsAsciiLetterUpper(character))
             {
+                // Split on lower->upper transitions ("ChatBot" => "chat_bot"). Consecutive uppers stay in the same token.
                 if (!wasPreviousUpper && !wasPreviousUnderscore && newLength > 0)
                 {
                     buffer[newLength++] = separator;
@@ -458,6 +469,8 @@ public static class StringExtension
         var valueSpan = value.AsSpan();
         var result = new StringBuilder(value);
 
+        // Scan the original template to find {...} ranges; replacements are applied to the StringBuilder.
+        // Using the original span keeps indices stable even when replacements change the output length.
         for (var i = 0; i < valueSpan.Length; ++i)
         {
             if (valueSpan[i] == '{')
@@ -471,6 +484,7 @@ public static class StringExtension
 
                 if (path.Length > 0 && placeholders.TryGetValue(path[0], out var element))
                 {
+                    // Support object property traversal: {user.name} reads placeholders["user"].name (properties normalized to snake_case).
                     var elementValue = GetElementValue(element, path[1..]);
                     if (elementValue is not null)
                     {

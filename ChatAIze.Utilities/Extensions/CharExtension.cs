@@ -14,6 +14,7 @@ namespace ChatAIze.Utilities.Extensions;
 /// </remarks>
 public static class CharExtension
 {
+    // FrozenDictionary provides fast, thread-safe lookups for this read-only transliteration table.
     private static readonly FrozenDictionary<char, char> transliterationMap = new Dictionary<char, char>
     {
         { 'İ', 'I' },

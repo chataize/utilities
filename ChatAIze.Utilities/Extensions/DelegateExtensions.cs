@@ -46,6 +46,7 @@ public static class DelegateExtensions
     {
         var name = callback.Method.Name;
 
+        // Compiler-generated names (lambdas/local functions) are not stable/public-friendly. Try to extract the original identifier.
         if (!name.Contains("<<"))
         {
             return name;
@@ -59,6 +60,7 @@ public static class DelegateExtensions
             throw new Exception($"Unable to get normalized method name from '{name}'.");
         }
 
+        // Some compiler-generated names include a "__<Name>|" segment; use the portion between "__" and "|" as the public identifier.
         return name[(start + 2)..end];
     }
 
@@ -97,10 +99,12 @@ public static class DelegateExtensions
         var parsedArguments = new List<object?>();
         using var argumentsDocument = JsonDocument.Parse(arguments);
 
+        // Bind parameters in declaration order so the delegate receives values in the correct positions.
         foreach (var parameter in callback.Method.GetParameters())
         {
             if (parameter.ParameterType == typeof(IFunctionContext))
             {
+                // Context values are injected by type (not by name) to make delegate signatures ergonomic.
                 parsedArguments.Add(functionContext);
                 continue;
             }
@@ -111,6 +115,7 @@ public static class DelegateExtensions
                 continue;
             }
 
+            // Tool-call JSON uses snake_case keys; C# parameters are typically camelCase/PascalCase.
             if (argumentsDocument.RootElement.TryGetProperty(parameter.Name!.ToSnakeLower(), out var argument) && argument.ValueKind != JsonValueKind.Null)
             {
                 var rawValue = argument.GetRawText();
@@ -118,6 +123,7 @@ public static class DelegateExtensions
 
                 if (parameter.ParameterType == typeof(string))
                 {
+                    // Basic validation for string inputs (keeps "tool-call contract" failures as user-friendly error strings).
                     if (parameter.GetCustomAttribute<RequiredAttribute>() is not null && string.IsNullOrWhiteSpace(stringValue))
                     {
                         return $"Error: Value missing for required parameter '{parameter.Name}'.";
@@ -140,6 +146,7 @@ public static class DelegateExtensions
                 {
                     if (parameter.ParameterType.IsEnum)
                     {
+                        // Allow "some_value" to bind to SomeValue by removing underscores and ignoring case.
                         if (!Enum.TryParse(parameter.ParameterType, stringValue!.Replace("_", ""), true, out var enumValue))
                         {
                             return $"Error: Value '{stringValue}' is not a valid enum member for parameter '{parameter.Name}'.";
@@ -184,6 +191,7 @@ public static class DelegateExtensions
             return "OK: Function executed successfully.";
         }
 
+        // Support async delegates returning Task / Task<T> / ValueTask / ValueTask<T>.
         if (invocationResult is Task task)
         {
             await task.ConfigureAwait(false);
@@ -215,6 +223,7 @@ public static class DelegateExtensions
             return stringResult;
         }
 
+        // Non-string results are JSON-serialized for LLM/tool output using snake_case property names.
         return JsonSerializer.Serialize(invocationResult, JsonOptions);
     }
 
@@ -249,6 +258,7 @@ public static class DelegateExtensions
         {
             if (parameter.ParameterType == typeof(IActionContext))
             {
+                // Workflow actions can accept IActionContext to report status/failure details back to the runner.
                 parsedArguments.Add(actionContext);
                 continue;
             }
@@ -261,6 +271,7 @@ public static class DelegateExtensions
 
             JsonElement argument = default;
 
+            // Accept both exact and snake_case keys because settings may come from JSON or C# dictionaries.
             if (arguments.TryGetValue(parameter.Name!, out var argument1))
             {
                 argument = argument1;
@@ -275,6 +286,7 @@ public static class DelegateExtensions
                 if (parameter.ParameterType == typeof(string))
                 {
                     var value = argument.GetString();
+                    // For actions, validation failures are also written to the context so the workflow can record an action result.
                     if (parameter.GetCustomAttribute<RequiredAttribute>() is not null && string.IsNullOrWhiteSpace(value))
                     {
                         actionContext?.SetActionResult(isSuccess: false, $"Value missing for required parameter '{parameter.Name}'.");
@@ -328,6 +340,7 @@ public static class DelegateExtensions
             return "OK: Action executed successfully.";
         }
 
+        // Support async delegates returning Task / Task<T> / ValueTask / ValueTask<T>.
         if (invocationResult is Task task)
         {
             await task.ConfigureAwait(false);
@@ -404,6 +417,7 @@ public static class DelegateExtensions
 
             JsonElement argument = default;
 
+            // Accept both exact and snake_case keys to match how condition settings are typically authored.
             if (arguments.TryGetValue(parameter.Name!, out var argument1))
             {
                 argument = argument1;
@@ -432,9 +446,11 @@ public static class DelegateExtensions
 
         if (invocationResult is null)
         {
+            // "No return value" counts as a failed condition (deny without a reason).
             return (false, null);
         }
 
+        // Support async delegates returning Task / Task<T> / ValueTask / ValueTask<T>.
         if (invocationResult is Task task)
         {
             await task.ConfigureAwait(false);
@@ -479,6 +495,7 @@ public static class DelegateExtensions
         int? minLength = null;
         int? maxLength = null;
 
+        // If multiple attributes are present, combine them by taking the strictest constraints.
         if (parameter.GetCustomAttribute<MinLengthAttribute>() is { } minLengthAttribute)
         {
             minLength = minLengthAttribute.Length;

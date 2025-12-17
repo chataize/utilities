@@ -34,8 +34,11 @@ public static partial class DateTimeOffsetParser
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the computed date/time is outside valid calendar ranges.</exception>
     public static DateTimeOffset Parse(string s)
     {
+        // Normalize input (lowercase + diacritics -> Latin equivalents + basic Polish word mapping) so the rest of the parser
+        // can rely on English keywords and ASCII-friendly comparisons.
         s = TranslateTime(s);
 
+        // Let the built-in parser handle ISO-like inputs first (fast path).
         if (DateTimeOffset.TryParse(s, out var result))
         {
             return result;
@@ -46,6 +49,8 @@ public static partial class DateTimeOffsetParser
             return DateTimeOffset.UtcNow;
         }
 
+        // Default to "today" in UTC and then overwrite fields as we discover them.
+        // Note: this intentionally uses UTC as the anchor; time zone abbreviations below adjust only the final offset.
         var year = DateTime.UtcNow.Year;
         var month = DateTime.UtcNow.Month;
         var day = DateTime.UtcNow.Day;
@@ -60,6 +65,8 @@ public static partial class DateTimeOffsetParser
             year = int.Parse(yearMatch.Value);
         }
 
+        // Very small grammar: treat the first "at" substring as the time separator and parse numeric parts after it.
+        // Note: this is a simple substring search (no tokenization), so words containing "at" can also trigger it.
         var atIndex = s.IndexOf("at");
         var beforeAt = s;
 
@@ -86,6 +93,7 @@ public static partial class DateTimeOffsetParser
             }
         }
 
+        // If a day-of-month appears before the optional "at", treat it as the desired day.
         var dayMatch = DayRegex().Match(beforeAt);
         if (dayMatch.Success)
         {
@@ -95,6 +103,8 @@ public static partial class DateTimeOffsetParser
         var isLast = s.Contains("last");
         var isNext = s.Contains("next");
 
+        // Day-of-week parsing is computed relative to the current UTC day-of-week.
+        // "weekend" maps to Saturday.
         var dayNames = new Dictionary<string, DayOfWeek>
         {
             { "monday", DayOfWeek.Monday },
@@ -132,6 +142,7 @@ public static partial class DateTimeOffsetParser
             }
         }
 
+        // Supported numeric date formats. Note that some formats are ambiguous (e.g. 01/02/2025).
         var slashDateMatch = SlashDateRegex().Match(s);
         if (slashDateMatch.Success)
         {
@@ -191,6 +202,7 @@ public static partial class DateTimeOffsetParser
             year = int.Parse(parts[2]);
         }
 
+        // Month names / abbreviations. These are simple substring checks and intentionally not culture-aware.
         if (s.Contains("january") || s.Contains("jan"))
         {
             month = 1;
@@ -251,6 +263,7 @@ public static partial class DateTimeOffsetParser
             month = 12;
         }
 
+        // "1st", "2nd", "3rd", "4th", etc.
         if (s.Contains("1st"))
         {
             day = 1;
@@ -272,6 +285,7 @@ public static partial class DateTimeOffsetParser
             day = int.Parse(nthDayMatch.Value[..^2]);
         }
 
+        // Relative day keywords. Note: day underflow (e.g. "yesterday" on the 1st) is not normalized and may throw later.
         if (s.Contains("yesterday"))
         {
             day = DateTime.UtcNow.Day - 1;
@@ -287,6 +301,7 @@ public static partial class DateTimeOffsetParser
             day = DateTime.UtcNow.Day + 1;
         }
 
+        // Time-of-day keywords override any previously parsed hour/minute/second.
         if (s.Contains("morning"))
         {
             hour = 8;
@@ -329,6 +344,7 @@ public static partial class DateTimeOffsetParser
             second = 0;
         }
 
+        // Explicit time "HH:mm" or "HH:mm:ss" overrides earlier parsing.
         var timeMatch = TimeRegex().Match(s);
         if (timeMatch.Success)
         {
@@ -343,6 +359,7 @@ public static partial class DateTimeOffsetParser
             }
         }
 
+        // Basic AM/PM handling: looks for " am"/" pm" substrings (requires a space; no full tokenization).
         if (s.Contains(" am") && hour == 12)
         {
             hour = 0;
@@ -353,6 +370,7 @@ public static partial class DateTimeOffsetParser
             hour += 12;
         }
 
+        // Common time zone abbreviations. These are fixed offsets and do not model DST.
         if (s.Contains(" utc") || s.Contains(" gmt"))
         {
             offset = TimeSpan.Zero;
@@ -388,6 +406,7 @@ public static partial class DateTimeOffsetParser
             offset = TimeSpan.FromHours(2);
         }
 
+        // "gmt+2" / "utc-5" style offsets.
         var gmtMatch = GmtRegex().Match(s);
         if (gmtMatch.Success)
         {
@@ -406,6 +425,8 @@ public static partial class DateTimeOffsetParser
             offset = TimeSpan.FromHours(offsetHours);
         }
 
+        // Normalize day overflow into subsequent months.
+        // Note: we do not normalize day underflow (day < 1). Callers should catch exceptions for malformed inputs.
         while (true)
         {
             var daysInMonth = DateTime.DaysInMonth(year, month);
@@ -430,8 +451,10 @@ public static partial class DateTimeOffsetParser
 
     private static string TranslateTime(string s)
     {
+        // Normalize early so keyword and regex checks in Parse can be simple.
         s = s.Trim().ToLowerInvariant().ToLatin();
 
+        // Minimal Polish -> English mapping so that Polish inputs can be interpreted by the rest of the parser.
         var map = new Dictionary<string, string>
         {
             ["styczen"] = "january",
@@ -484,6 +507,7 @@ public static partial class DateTimeOffsetParser
             ["przyszla"] = "next"
         };
 
+        // Use word boundaries to avoid accidental replacements inside longer words.
         var pattern = @"\b(" + string.Join("|", map.Keys.Select(Regex.Escape)) + @")\b";
         s = Regex.Replace(s, pattern, match => map[match.Value], RegexOptions.IgnoreCase);
 

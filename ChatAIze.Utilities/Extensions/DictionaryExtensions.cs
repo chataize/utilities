@@ -53,6 +53,7 @@ public static class DictionaryExtensions
     /// </remarks>
     public static Dictionary<string, object> WithPlaceholderValues(this IReadOnlyDictionary<string, object> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
+        // Work on a copy so callers can keep their original dictionary unchanged.
         var newValues = new Dictionary<string, object>(values);
 
         foreach (var key in newValues.Keys)
@@ -81,6 +82,7 @@ public static class DictionaryExtensions
     /// </remarks>
     public static Dictionary<string, JsonElement> WithPlaceholderValues(this IReadOnlyDictionary<string, JsonElement> values, params IEnumerable<KeyValuePair<string, object>> placeholders)
     {
+        // Work on a copy so callers can keep their original dictionary unchanged.
         var newValues = new Dictionary<string, JsonElement>(values);
 
         foreach (var key in newValues.Keys)
@@ -94,10 +96,13 @@ public static class DictionaryExtensions
             }
             else if (newValues[key].ValueKind is JsonValueKind.Object or JsonValueKind.Array)
             {
+                // For structured JSON, substitute into the raw JSON text and then reparse.
+                // Callers must ensure the placeholder values result in valid JSON (no escaping is performed).
                 var rawText = newValues[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
                 using var document = JsonDocument.Parse(newText);
+                // Clone because JsonDocument will be disposed at the end of the using scope.
                 newValues[key] = document.RootElement.Clone();
             }
         }
@@ -118,6 +123,7 @@ public static class DictionaryExtensions
     /// </remarks>
     public static Dictionary<string, JsonElement> WithPlaceholderValues(this IReadOnlyDictionary<string, JsonElement> values, IReadOnlyDictionary<string, JsonElement> placeholders)
     {
+        // Work on a copy so callers can keep their original dictionary unchanged.
         var newValues = new Dictionary<string, JsonElement>(values);
 
         foreach (var key in newValues.Keys)
@@ -131,10 +137,12 @@ public static class DictionaryExtensions
             }
             else if (newValues[key].ValueKind is JsonValueKind.Object or JsonValueKind.Array)
             {
+                // Substitute into raw JSON and reparse (placeholders must preserve JSON validity).
                 var rawText = newValues[key].GetRawText() ?? string.Empty;
                 var newText = rawText.WithPlaceholderValues(placeholders);
 
                 using var document = JsonDocument.Parse(newText);
+                // Clone because JsonDocument will be disposed at the end of the using scope.
                 newValues[key] = document.RootElement.Clone();
             }
         }
