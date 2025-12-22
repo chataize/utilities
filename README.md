@@ -147,5 +147,10 @@ It is not published as a package.
 - `ChatAIze.PluginApi`: concrete helper implementations for plugin authors.
 - `ChatAIze.GenerativeCS`: tool schema generation, uses `ToSnakeLower` and `NormalizedEquals`.
 
+## Links
+- GitHub: https://github.com/chataize/utilities
+- Chataize organization: https://github.com/chataize
+- Website: https://www.chataize.com
+
 ## License
 GPL-3.0-or-later. See `LICENSE` for details.
